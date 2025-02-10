@@ -1,0 +1,122 @@
+---
+title: "01_Wrangling"
+format: html
+editor: visual
+---
+
+## 
+
+```{r Paint combinations}
+
+# first chunk is to make unique paint combinations for the bees
+
+# from Richardson et al. (2021) - https://doi.org/10.1038/s42003-021-02048-7
+
+
+## This programs produces the largest possible set of colour-location combinations with a maximum given number of overlapping spots (max_common_spots, input by the user in variable max_common_spots)
+## The set of colour-location combinations produced is sorted in increasing order of overlap between combinations
+## Thus starting from the top of the list will always lead to the optimal set (i.e. the set minimising overlap between combinations) regardless of the number of combinations desired
+## The code can be adjusted for any number of colours (variable 'colour_list') and any number of paint locations (variable 'locations')
+## (Note that the processing time will scale exponentially with the number of colours and number of locations because of the increasing number of possible combinations)
+## The program requires the installation of R libraries 'gtools' and 'Rcpp' and calls the associated cpp function "combination_overlap.cpp", which must be in the same folder as this program
+
+rm(list=ls())
+
+library(gtools)
+library(Rcpp)
+Sys.setenv("PKG_CXXFLAGS"="-std=c++11")
+sourceCpp('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Extra/Paint_ID_combination_overlap.cpp')
+
+
+
+## 1. Define Parameters 
+
+# list of colours
+colour_list <- c("W", "G", "B", "O", "P") # list of 
+# locations on bee
+locations <- c("Top_L","Top_R","Bottom")
+# max number of identical spot combinations
+max_common_spots <- 2                                        
+# number of random trials to obtain best list. Higher = better chance of obtaining longest possible list buit longer processing time
+nb_rand <- 150
+
+
+## 2. Generate all possible colour combinations, for Nb_colours colours & Nb_locations 
+
+all_combs <- data.frame(permutations(n=length(colour_list) ,r=length(locations),v=colour_list,repeats.allowed=T), stringsAsFactors = F) ; colnames(all_combs) <- c("Top_L","Top_R","Bottom")
+
+## 3. Generate edge list: Nb of location-colours attributes that are identical between each pair of combinations 
+
+all_comb_list <- list()
+for (col_idx in 1:length(locations)){
+  all_comb_list[[col_idx]] <- as.numeric(match(all_combs[,col_idx],colour_list))
+}
+edge_list <- define_edge_list(all_comb_list, length(locations), choose(nrow(all_combs),2))
+
+## 4. Using 1000 randomly chosen starting combinations, generate the list of combinations that have no more than max_common_spots in common
+# The starting node leading to the largest list will then be selected
+# In order to obtain the best possible ordering, repeat the process for decreasing number of common spots, until there is no overlap  
+ 
+# initialise objects
+selected_combinations <- 1:nrow(all_combs)
+selected_combination_lists <- vector("list", max_common_spots+1) 
+
+while(max_common_spots>=0){
+  print(paste("Finding combinations that have no more than",max_common_spots,"spots in common..."))
+  selected_combinations <- sort(subsample_combinations(edge_list,max_common_spots,nb_rand, selected_combinations))
+  selected_combination_lists[[max_common_spots+1]] <- selected_combinations
+  ##Now reduce edge list to only contain those combinations
+  edge_list <- edge_list[which(edge_list$comb_1%in%selected_combinations&edge_list$comb_2%in%selected_combinations),]
+  ## In the first iteration, save reduced edge list as it will be used in the next step
+  if (!exists("reduced_edge_list")){reduced_edge_list <- edge_list}
+  max_common_spots <- max_common_spots-1
+}
+
+
+## 5. Sort the selected combinations from most different to most similar, and write it  
+
+sorted_combinations <- sort_combinations(selected_combination_lists,reduced_edge_list)
+write.table(data.frame(all_combs[as.numeric(sorted_combinations$sorted_indices),],Mean_overlap=round(1000*as.numeric(sorted_combinations$mean_overlap))/1000,stringsAsFactors = F),file="Data/Paint_IDs_rewritten.csv",col.names=T,row.names=F,quote=F,append=F)
+
+
+
+```
+
+```{r Floral surveys}
+
+library(tidyverse)
+
+# load in floral survey data
+survey <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Floral_surveys.csv')
+
+# load in plant pollen sample data
+p_pollen_samples <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_samples_plant.csv')
+
+
+## Make a list of pollen samples that I have
+
+# organize by taxa alphabetically
+survey <- arrange(survey, Taxa)  
+
+# make first letter capital
+survey$Taxa <- str_replace(survey$Taxa, "^\\w{1}", toupper)
+survey$Family <- str_replace(survey$Family, "^\\w{1}", toupper)
+p_pollen_samples$Taxa <- str_replace(p_pollen_samples$Taxa, "^\\w{1}", toupper)
+
+# check the unique taxa, any diplucates from spelling erorrs? nothing jumpes out
+unique(survey$Taxa)
+# rename column
+survey <- survey %>% rename(Taxa_with_notes = Taxa)
+# take only first word (e.g., ignore "fruiting" or species names)
+survey <- mutate(survey, Taxa = word(Taxa_with_notes, 1))
+p_pollen_samples <- mutate(p_pollen_samples, Taxa = word(Taxa, 1))
+
+# join data frames
+p_sample_list <- right_join(survey, p_pollen_samples)
+# organize by taxa alphabetically
+p_sample_list <- arrange(p_sample_list, Taxa)  
+
+write_csv(p_sample_list, 'Data/p_sample_list.csv')
+
+
+```
