@@ -61,7 +61,7 @@ JAM,79 tirohanga,200m,early/mid,Nov 28 2024,poppy,eschscholzia,Papaveraceae,unco
 JAM,80 tirohanga,200m,early/mid,Nov 28 2024,forget me nots,myosotis,Boraginaceae,rare
 JAM,81 tirohanga,200m,early/mid,Nov 28 2024,groundsel,senecio,Asteraceae,rare
 JAM,82 tirohanga,200m,early/mid,Nov 28 2024,thistle,sonchus,Asteraceae,rare
-JAM,83 tirohanga,200m,early/mid,Nov 28 2024,fennel,foeniculum,Umbelliferae,rare
+JAM,83 tirohanga,200m,early/mid,Nov 28 2024,fennel,foeniculum,Apiaceae,rare
 JAM,84 tirohanga,200m,early/mid,Nov 28 2024,thyme,thymus,Lamiaceae,rare
 JAM,85 tirohanga,200m,early/mid,Nov 28 2024,rosemary,salvia,Lamiaceae,rare
 JAM,86 tirohanga,200m,early/mid,Nov 28 2024,sage,salvia,Lamiaceae,rare
@@ -98,7 +98,6 @@ JAM,77 tirohanga,200m,early/mid,Dec 2 2024,mustard,sisybrium,Brassicaceae,rare
 JAM,77 tirohanga,200m,early/mid,Dec 2 2024,sow thistles,sonchus,Asteraceae,available
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,flax,astelia (fruiting),Asteliaceae,rare
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,Camellia,Camellia (fruiting),Theaceae,rare
-JAM,67 tirohanga,200m,early/mid,Dec 5 2024,Honeysuckle,viburnum (fruiting),Adoxaceae,uncommon
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,rock rose,cistus,cistaceae,uncommon
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,roses,rosa,Rosaceae,uncommon
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,speedwells,veronica,plantaginaceae,available
@@ -236,7 +235,6 @@ KB,Western property (janices),200m,early/mid,Dec 11 2024,Lupin,Lupine,Fabaceae,r
 KB,Western property (janices),200m,early/mid,Dec 11 2024,Dandelion,Taraxacum,Asteraceae,abundant
 KB,Western property (janices),200m,early/mid,Dec 11 2024,Forget-me-not,Myosotis,Boraginaceae,uncommon
 KB,Western property (janices),200m,early/mid,Dec 11 2024,gorse,ulex,Fabaceae,abundant
-KB,Western property (janices),200m,early/mid,Dec 11 2024,Swamp white,Quercus,Fagaceae,uncommon
 KB,Western property (janices),200m,early/mid,Dec 11 2024,(fruiting bush),,,available
 KB,Western property (janices),200m,early/mid,Dec 11 2024,,,Brassicaceae (Brassicodeae),rare
 KB,Western property (janices),200m,early/mid,Dec 11 2024,horehound,Marrubium,Lamiaceae,uncommon
@@ -416,7 +414,7 @@ JAM,61 Tirohanga,200m,late,Jan 27 2025,marigold,tagetes,Asteraceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,japanese anenome,Eriocapitella,Asteraceae,uncommon
 JAM,61 Tirohanga,200m,late,Jan 27 2025,crane's bill,geranium,Geraniaceae,available
 JAM,61 Tirohanga,200m,late,Jan 27 2025,,Dahlia,Asteraceae,rare
-JAM,61 Tirohanga,200m,late,Jan 27 2025,fenell,foeniculum,Umbelliferae,uncommon
+JAM,61 Tirohanga,200m,late,Jan 27 2025,fenell,foeniculum,Apiaceae,uncommon
 JAM,61 Tirohanga,200m,late,Jan 27 2025,God's throne,echeveria,Crassulaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,True lily,lilium,Liliaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,Blue-eyed grasses,sisyrinchium,Iridaceae,rare

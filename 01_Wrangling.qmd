@@ -6,7 +6,7 @@ editor: visual
 
 ## 
 
-```{r Paint combinations}
+```{r Paint combinations, eval = FALSE}
 
 # first chunk is to make unique paint combinations for the bees
 
@@ -76,7 +76,7 @@ while(max_common_spots>=0){
 ## 5. Sort the selected combinations from most different to most similar, and write it  
 
 sorted_combinations <- sort_combinations(selected_combination_lists,reduced_edge_list)
-write.table(data.frame(all_combs[as.numeric(sorted_combinations$sorted_indices),],Mean_overlap=round(1000*as.numeric(sorted_combinations$mean_overlap))/1000,stringsAsFactors = F),file="Data/Paint_IDs_rewritten.csv",col.names=T,row.names=F,quote=F,append=F)
+write.table(data.frame(all_combs[as.numeric(sorted_combinations$sorted_indices),],Mean_overlap=round(1000*as.numeric(sorted_combinations$mean_overlap))/1000,stringsAsFactors = F),file="Data/Paint_ID/Paint_IDs_rewritten.csv",col.names=T,row.names=F,quote=F,append=F)
 
 
 
@@ -87,10 +87,10 @@ write.table(data.frame(all_combs[as.numeric(sorted_combinations$sorted_indices),
 library(tidyverse)
 
 # load in floral survey data
-survey <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Floral_surveys.csv')
+survey <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_and_Surveys/Floral_surveys.csv')
 
 # load in plant pollen sample data
-p_pollen_samples <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_samples_plant.csv')
+p_pollen_samples <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_and_Surveys/Pollen_samples_plant.csv')
 
 
 ## Make a list of pollen samples that I have
@@ -116,7 +116,38 @@ p_sample_list <- right_join(survey, p_pollen_samples)
 # organize by taxa alphabetically
 p_sample_list <- arrange(p_sample_list, Taxa)  
 
-write_csv(p_sample_list, 'Data/p_sample_list.csv')
+write_csv(p_sample_list, 'Data/Pollen_and_Surveys/Pollen_sample_list.csv')
 
+
+```
+
+```{r Bee Pollen Samples}
+
+# how many bees did I mark?
+IDs_JAM <- read_csv('Data/Paint_ID/Paint_IDs_JAM.csv')
+IDs_KB <- read_csv('Data/Paint_ID/Paint_IDs_KB.csv')
+length(unique(IDs_JAM$ID)) # 82 
+length(unique(IDs_KB$ID)) # 32 
+# 114 in total
+
+# how many pollen samples did I get from bees?
+Pollen_collection_JAM <- read_csv('Data/Pollen_and_Surveys/Pollen_collection_JAM.csv')
+Pollen_collection_KB <- read_csv('Data/Pollen_and_Surveys/Pollen_collection_KB.csv')
+length(Pollen_collection_JAM$ID) # 73
+length(Pollen_collection_KB$ID) # 10 
+# 73 in total 
+
+# what are the repeated samples like for pollen collection?
+Pollen_collection_JAM_repeats <- Pollen_collection_JAM %>% 
+  group_by(ID) %>% 
+  summarize(n = n()) %>% 
+  ungroup()
+Pollen_collection_KB_repeats <- Pollen_collection_KB %>% 
+  group_by(ID) %>% 
+  summarize(n = n()) %>% 
+  ungroup()
+table(Pollen_collection_JAM_repeats$n)
+table(Pollen_collection_KB_repeats$n)
+# 29 bees 1x, 12 bees 2x, 6 bees 3x, and 3 bees 4x
 
 ```
