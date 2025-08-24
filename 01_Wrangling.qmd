@@ -10,7 +10,7 @@ library(tidyverse)
 
 ```
 
-```{r Paint combinations, eval = FALSE}
+```{r Paint_combinations, eval = FALSE}
 
 # first chunk is to make unique paint combinations for the bees
 
@@ -83,7 +83,7 @@ library(tidyverse)
 
 ```
 
-```{r Floral surveys}
+```{r Floral_surveys}
 
 # # checking which flowers I need samples for during fieldwork
 # 
@@ -121,7 +121,7 @@ library(tidyverse)
 
 ```
 
-```{r Bee Pollen Samples}
+```{r Bee_pollen_samples}
 
 # how many bees did I mark?
 IDs_JAM <- read_csv('Data/Paint_ID/Paint_IDs_JAM.csv')
@@ -146,6 +146,20 @@ pollen$Date <- with(pollen, paste(Year, paste0(Month,sep = '-', Day), sep = '-')
 str(pollen)
 pollen$Date <- as.Date(pollen$Date)
 
+# combine ID with site in case the same ID was used for both sites
+pollen$Bee_ID <- as.character(pollen$Bee_ID)
+pollen$Bee_ID <- paste(pollen$Site, pollen$Bee_ID, sep = '_') 
+table(pollen$Bee_ID) # looks good
+
+# count number of samples for each bee
+pollen <- pollen %>%
+  group_by(Bee_ID) %>%
+  mutate(Sample_counts = n_distinct(Date)) %>%
+  ungroup()
+
+# remove pollen types with less than 1% (1-2 pollen grains) because it could be from landing on the flower for nectar or contamination from making pollen slides, likely not a bee collecting pollen
+pollen <- pollen %>% filter(Count > 3)
+
 
 # descriptive
 # 
@@ -165,17 +179,26 @@ pollen$Date <- as.Date(pollen$Date)
 
 ```
 
-```{r Pollen figure}
+```{r Pollen_figure}
 
 
 library(ggplot2)
-library(dplyr)
 
 # order by bee ID then filter to make 3 figures because too many individuals for just one
 pollen %>% arrange(Date)
 
-# Assuming your data is in a data frame called 'pollen_data'
-ggplot(pollen, aes(x = Date, y = Count, fill = Family)) +
+str(pollen)
+
+# make date labels for the figure
+pollen <- pollen %>%
+  mutate(
+    Date_label  = format(Date, "%b %d"),                    
+    Date_label  = factor(Date_label, levels = format(sort(unique(Date)), "%b %d")))
+
+
+pollen %>% 
+  filter(Sample_counts > 1) %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
   geom_bar(stat = "identity", position = "fill") +  # 'fill' for proportions
   scale_y_continuous(labels = scales::percent) +
   labs(x = "Date", y = "Proportion of pollen types") +
@@ -184,7 +207,7 @@ ggplot(pollen, aes(x = Date, y = Count, fill = Family)) +
 
 ```
 
-```{r Behaviour}
+```{r Behaviour_data}
 
 beehave_0 <- read_csv('Data/Behaviour/Video_logs_summary.csv')
 str(beehave_0)
@@ -218,6 +241,7 @@ beehave_sum <- beehave_sum %>%
 
 # descriptive
 length(unique(beehave_sum$Nest)) # 51 nests observed 
+#### count how many are solial or solitary, and compare with when males are leaving. Maybe a figure?
 
 
 ```
