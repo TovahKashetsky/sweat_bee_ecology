@@ -1,14 +1,14 @@
 Slide_code,Bee_ID,Site,Day,Month,Year,Pollen_colour
-J-170,PBP (pink),JAM,7,11,2024,light yellow
+J-170,PiBP,JAM,7,11,2024,light yellow
 J-202,W,JAM,7,11,2024,medium yellow
 J-221,OOO,JAM,7,11,2024,light yellow
-J-187,OBO,JAM,7,11,2024,light yellow
+J-187,OBO-P,JAM,7,11,2024,light yellow
 J-265,GGP,JAM,7,11,2024,medium yellow
 J-195,WWP,JAM,7,11,2024,medium yellow
 J-148,POO,JAM,7,11,2024,dark yellow
 J-267,PPO,JAM,7,11,2024,medium yellow
 J-247,PPB,JAM,12,11,2024,dark yellow
-J-130,PBP (pink),JAM,12,11,2024,medium yellow
+J-130,PiBP,JAM,12,11,2024,medium yellow
 J-161,OOO,JAM,12,11,2024,medium yellow
 J-258,OGG,JAM,12,11,2024,medium yellow
 J-212,PPW,JAM,12,11,2024,dark yellow
@@ -23,8 +23,8 @@ J-156,BWW,JAM,18,11,2024,dark yellow
 J-159,POG,JAM,18,11,2024,light yellow
 J-162,OPG,JAM,18,11,2024,light yellow
 J-240,OGG,JAM,18,11,2024,light yellow
-J-116,OBO,JAM,18,11,2024,dark yellow
-J-149,PBP-W,JAM,18,11,2024,medium yellow
+J-116,OBO-P,JAM,18,11,2024,dark yellow
+J-149,PrBP-W,JAM,18,11,2024,medium yellow
 J-196,POP,JAM,18,11,2024,light yellow
 J-253,GBG,JAM,18,11,2024,medium yellow
 J-299,POG,JAM,19,11,2024,medium yellow
@@ -36,7 +36,7 @@ J-291,W-WWG,JAM,19,11,2024,light yellow
 J-143,WBP,JAM,25,11,2024,
 J-154,OOO,JAM,25,11,2024,medium yellow
 J-178,GGP,JAM,25,11,2024,light yellow
-J-255,PBP-W,JAM,25,11,2024,dark yellow
+J-255,PrBP-W,JAM,25,11,2024,dark yellow
 J-222,POO,JAM,25,11,2024,medium yellow
 J-233,W-WWG,JAM,25,11,2024,light yellow
 J-211,OGG,JAM,25,11,2024,light yellow
@@ -56,7 +56,7 @@ J-182,W-OWW,JAM,15,1,2025,medium yellow
 J-197,Y-YPP,JAM,15,1,2025,dark yellow
 J-145,Y-PPY,JAM,15,1,2025,medium yellow
 J-137,W-PWO,JAM,16,1,2025,dark yellow
-J-193,P-OOP,JAM,16,1,2025,light yellow
+J-193,P-OOP-O,JAM,16,1,2025,light yellow
 J-203,Y-WYW,JAM,16,1,2025,medium yellow
 J-208,Y-PPY,JAM,16,1,2025,medium yellow
 J-250,W-PWO,JAM,22,1,2025,medium yellow
@@ -64,7 +64,7 @@ J-226,O-OBB,JAM,28,1,2025,dark yellow
 J-199,B-BPP,JAM,3,2,2025,light yellow
 J-133,O-OBB,JAM,3,2,2025,medium yellow
 J-249,W-PWO,JAM,3,2,2025,medium yellow
-J-256,OWW,JAM,4,2,2025,dark yellow
+J-256,W-OWW,JAM,4,2,2025,dark yellow
 K-273,GGB,KB,3,12,2024,light yellow
 K-167,WWG,KB,3,12,2024,light yellow
 K-261,OOO,KB,3,12,2024,light yellow
@@ -73,7 +73,7 @@ K-122,PWP,KB,4,12,2024,light yellow
 K-146,GGW,KB,18,12,2024,light yellow
 K-140,OOB,KB,17,1,2025,light yellow
 J-147,WGO,JAM,5,12,2024,medium yellow
-J-213,PBP,JAM,5,12,2024,dark yellow
+J-213,PiBP,JAM,5,12,2024,dark yellow
 K-266,PBB,KB,4,12,2024,light yellow
 K-117,WBW,KB,4,12,2024,light yellow
 J-190,WWP,JAM,5,12,2024,light yellow

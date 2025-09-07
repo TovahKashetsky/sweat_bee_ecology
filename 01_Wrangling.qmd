@@ -131,92 +131,136 @@ length(unique(IDs_KB$Bee_ID)) # 32
 # 114 in total
 
 
-## Pollen Count Dataframe
+## Organizing pollen count dataframe
 
 # after identifying the pollen blindly, now merge the pollen ID and the bee ID files together 
 pollen_codes <- read_csv('Data/Pollen_and_Surveys/Pollen_codes.csv')
 pollen_samples_ID <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_ID.csv')
-pollen <- full_join(pollen_samples_ID, pollen_codes, by = "Slide_code") # join
+pollen_0 <- full_join(pollen_samples_ID, pollen_codes, by = "Slide_code") # join
 
 # reorder columns
-pollen = pollen %>% select(Site, Bee_ID, Day, Month, Year, Slide_code, Family, Subtype, Count, Pollen_colour)
+pollen_0 = pollen_0 %>% select(Site, Bee_ID, Day, Month, Year, Slide_code, Family, Subtype, Count, Pollen_colour)
 
 # creat date column
-pollen$Date <- with(pollen, paste(Year, paste0(Month,sep = '-', Day), sep = '-'))
-str(pollen)
-pollen$Date <- as.Date(pollen$Date)
+pollen_0$Date_pollen <- with(pollen_0, paste(Year, paste0(Month,sep = '-', Day), sep = '-'))
+str(pollen_0)
+pollen_0$Date_pollen <- as.Date(pollen_0$Date_pollen)
+pollen_0 <- pollen_0 %>% select(-Day, -Month, -Year)
 
 # combine ID with site in case the same ID was used for both sites
-pollen$Bee_ID <- as.character(pollen$Bee_ID)
-pollen$Bee_ID <- paste(pollen$Site, pollen$Bee_ID, sep = '_') 
-table(pollen$Bee_ID) # looks good
+pollen_0$Bee_ID <- as.character(pollen_0$Bee_ID)
+pollen_0$Bee_ID <- paste(pollen_0$Site, pollen_0$Bee_ID, sep = '_') 
+table(pollen_0$Bee_ID) # looks good
 
 # count number of samples for each bee
-pollen <- pollen %>%
+pollen <- pollen_0 %>%
   group_by(Bee_ID) %>%
-  mutate(Sample_counts = n_distinct(Date)) %>%
+  mutate(Num_of_samples = n_distinct(Date_pollen)) %>%
   ungroup()
+
+# make sure each individual has 300 pollen grains
+pollen %>% 
+  group_by(Bee_ID, Date_pollen) %>%
+  summarize(sum(Count))
 
 # remove pollen types with less than 1% (1-2 pollen grains) because it could be from landing on the flower for nectar or contamination from making pollen slides, likely not a bee collecting pollen
 pollen <- pollen %>% filter(Count > 3)
 
 
-# descriptive
-# 
-# # what are the repeated samples like for pollen collection?
-# Pollen_collection_JAM_repeats <- Pollen_collection_JAM %>% 
-#   group_by(ID) %>% 
-#   summarize(n = n()) %>% 
-#   ungroup()
-# Pollen_collection_KB_repeats <- Pollen_collection_KB %>% 
-#   group_by(ID) %>% 
-#   summarize(n = n()) %>% 
-#   ungroup()
-# table(Pollen_collection_JAM_repeats$n)
-# table(Pollen_collection_KB_repeats$n)
-# # 29 bees 1x, 12 bees 2x, 6 bees 3x, and 3 bees 4x
+## Descriptive
+
+# how many individuals collected 1 pollen type vs more than one?
+# number of pollen types
+pollen <- pollen %>%
+  group_by(Bee_ID, Date_pollen) %>%
+  mutate(Num_of_families = n_distinct(Family)) %>%
+  ungroup()
+
+pollen <- pollen %>%
+  group_by(Bee_ID, Date_pollen) %>%
+  mutate(Num_of_subtypes = n_distinct(T=Subtype)) %>%
+  ungroup()
+
+# make summary for descriptive stats
+pollen_summary <- pollen %>%
+  distinct(Bee_ID, Date_pollen, .keep_all = TRUE)
+# keep relevant columns
+pollen_summary <- pollen_summary %>%
+  select(Site, Bee_ID, Date_pollen, Num_of_samples, Num_of_families, Num_of_subtypes)
+
+table(pollen_summary$Num_of_families)
+# 40 / 83 samples have a single pollen type
+# if we say 95% of pollen from one family, it's 49 / 83 (counted manually)
+table(pollen_summary$Num_of_subtypes) # number of subtypes barely changes anything
 
 
 ```
 
-```{r Pollen_figure}
+```{r Pollen_figures}
 
 
 library(ggplot2)
 
-# order by bee ID then filter to make 3 figures because too many individuals for just one
-pollen %>% arrange(Date)
-
-str(pollen)
-
 # make date labels for the figure
 pollen <- pollen %>%
   mutate(
-    Date_label  = format(Date, "%b %d"),                    
-    Date_label  = factor(Date_label, levels = format(sort(unique(Date)), "%b %d")))
+    Date_label  = format(Date_pollen, "%b %d"),                    
+    Date_label  = factor(Date_label, levels = format(sort(unique(Date_pollen)), "%b %d")))
 
+# reorder the pollen counts within each bee from smallest to largest pollen count
+pollen <- pollen %>%
+  group_by(Bee_ID, Date_pollen) %>%
+  arrange(Count)
 
+# bees with multiple samples 
 pollen %>% 
-  filter(Sample_counts > 1) %>% 
+  filter(Num_of_samples > 1) %>% 
   ggplot(aes(x = Date_label, y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +  # 'fill' for proportions
-  scale_y_continuous(labels = scales::percent) +
-  labs(x = "Date", y = "Proportion of pollen types") +
+  geom_bar(stat = "identity", position = "fill") +  
+  labs(x = "Date", y = "Proportion of pollen") +
   facet_wrap(~ Bee_ID, scales = "free_x") 
 
+# bees with 1 sample at JAM
+pollen %>%
+  filter(Num_of_samples < 2 & Site == "JAM") %>%
+  mutate(Label = paste0(Bee_ID, " (", Date_label, ")")) %>%
+  ggplot(aes(x = reorder(Label, Date_pollen), y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Individual ID (Date)", y = "Proportion of pollen") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+# bees with 1 sample at KB
+pollen %>%
+  filter(Num_of_samples < 2 & Site == "KB") %>%
+  mutate(Label = paste0(Bee_ID, " (", Date_label, ")")) %>%
+  ggplot(aes(x = reorder(Label, Date_pollen), y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Individual ID (Date)", y = "Proportion of pollen") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+
+# pollen types bees collected, summary 
+
+pollen %>% 
+  ggplot(aes(x = Site, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill")
 
 ```
 
 ```{r Behaviour_data}
 
-beehave_0 <- read_csv('Data/Behaviour/Video_logs_summary.csv')
-str(beehave_0)
+# beehav has all individuals per nest
+# beehav_sum_rep has repeated lines within a nest, but one line per unique value of Num_females_con per nest
+# beehav_sum has one line per nest with the highest Num_females_con number
+
+beehav <- read_csv('Data/Behaviour/Video_logs_summary.csv')
 
 # creat date column
-beehave_0$Date <- with(beehave_0, paste(Year, paste0(Month,sep = '-', Day), sep = '-'))
-beehave_0$Date <- as.Date(beehave_0$Date)
-# group by week
-beehave_0$Week <- strftime(beehave_0$Date , format = "%V")
+beehav$Date_beehav <- with(beehav, paste(Year, paste0(Month, sep = '-', Day), sep = '-'))
+beehav$Date_beehav <- as.Date(beehav$Date_beehav)
+beehav <- beehav %>% select(-Day, -Month, -Year)
+
 
 # Number of females
  # liberal : pollen collection, digging, vigilance, and leaving
@@ -224,24 +268,348 @@ beehave_0$Week <- strftime(beehave_0$Date , format = "%V")
  # conservative : pollen collection, digging and IF we know their ID, vigilance or leaving nest or entering without pollen
  # vigilance is peaking out of the nest if they do not leave for the following 2 minutes
 
-# exceptions ###### incorperate into df
-# J75: two bees painted from this nest
-
 # make summary with only 1 row per nest
-beehave_sum <- distinct(beehave_0, Nest, Num_females_con, Date, .keep_all= TRUE)
+beehav_sum_rep <- distinct(beehav, Nest, Num_females_con, Date_beehav, .keep_all= TRUE)
 # remove columns that don't make sense for summary df
-beehave_sum <- beehave_sum %>% 
-  select(Nest, Site, Num_females_con, Num_females_mod, Num_females_lib, Date, Week)
+beehav_sum_rep <- beehav_sum_rep %>% 
+  select(Nest, Site, Num_females_con, Num_females_mod, Num_females_lib, Date_beehav)
 # sometimes there are two rows per date and nest combo because we filmed the nest subsequently with a second camera (e.g., after the first one died or the SD card filled up)
 # so if there are duplciate nest-date combos, remove the lowest valued Num_females_con
-beehave_sum <- beehave_sum %>% 
-  group_by(Nest, Date) %>% 
+beehav_sum_rep <- beehav_sum_rep %>% 
+  group_by(Nest, Date_beehav) %>% 
   slice_max(Num_females_con, n=1) %>% 
   ungroup
 
-# descriptive
-length(unique(beehave_sum$Nest)) # 51 nests observed 
-#### count how many are solial or solitary, and compare with when males are leaving. Maybe a figure?
+# mark nests as solitary or social for each date (may end up with nests that go back and forth between solitary and social)
+beehav_sum_rep <- beehav_sum_rep %>% 
+  mutate(Social_status_con = ifelse(Num_females_con > 1, "social", "solitary"))
+beehav_sum_rep <- beehav_sum_rep %>% 
+  mutate(Social_status_mod = ifelse(Num_females_mod > 1, "social", "solitary"))
+beehav_sum_rep <- beehav_sum_rep %>% 
+  mutate(Social_status_lib = ifelse(Num_females_lib > 1, "social", "solitary"))
 
+## Create one line per nest 
+# with the maximum Num_females_con. If that's tied, then Num_females_mod, if that's tied, then Num_females_lib
+
+beehav_sum <- beehav_sum_rep %>%
+  group_by(Nest) %>%
+  arrange(desc(Num_females_con), desc(Num_females_mod), desc(Num_females_lib)) %>%
+  slice_head(n = 1) %>%
+  ungroup()
+
+
+# MOST CONSERVATIVE ESTIMATE
+# make df to make sure each nest is counted once
+# count number solitary nests for each site
+JAM_sol_con <- beehav_sum %>%
+  filter(Site == "JAM", Num_females_con == 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 24
+KB_sol_con <- beehav_sum %>%
+  filter(Site == "KB", Num_females_con == 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 11
+# count number social nests for each site
+JAM_soc_con <- beehav_sum %>%
+  filter(Site == "JAM", Num_females_con > 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 5
+KB_soc_con <- beehav_sum %>%
+  filter(Site == "KB", Num_females_con > 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 1
+
+
+## are there multiple females in the nest that don't appear in the same video?
+# manually check, would've been missed by the behavioural analyses 
+
+indv_and_nests <- beehav %>%
+  group_by(Nest, Date_beehav) %>%  
+  summarise(Bee_ID = paste(unique(Bee_ID)))
+
+# manually check the observations sheets to see if the additional females are doing nest care, and classify the number of individuals with the conservative, moderate, and liberal estimate
+# I did this with the indv_and_nests df and wrote it out in excel, the work where the number of females ever recorded from the nests is different from the number observed in the videos
+# Changes after checking indv_and_nests:
+
+# Nest - # unique IDs per nest - Is that number according to the conservative estimate?
+# J100 - 2 - yes
+# J18	- 4 - yes
+# J26	- 2 - yes
+# J58	- 2 - no - No ID is vigilance then leaving
+# J75	- 2 - yes - double check on video it’s the same nest ###
+# J87	- 3 - yes
+# J90	- 2 - no - No ID is vigilance and/or leaving
+# J91	- 3 - yes
+# J92	- 3 - yes
+# K13	- 2 - yes
+# K23	- 2 - yes
+# K4	- 2 - yes
+# K8	- 2 - yes - No ID is vigilance and digging
+
+# Changes after adding in IDs from the paint marking sheet (but not recorded on video):
+
+# Nest -	Number of total females -	Notes
+# J00	-	1	- painted 
+# J11	-	2	-	two IDs from this nest but the unknown seen is just vigilance 
+# J18	-	4	-	* check if the unknowns are P-PPG ###
+# J26	-	3 -	painted a No ID on Jan 6, another No ID on Feb 3 doing vigilance 
+# J36 -	2 -	painted OWO on Nov 6 then No ID on Nov 18 and 19 doing vigilance and digging
+# J44 -	2 -	painted PWW on Nov 7 then No ID collected pollen on Nov 18 and 25
+# J51 -	2 -	O-WOW painted from here but never recorded 
+# J56 -	2 -	two painted but never recorded
+# J60 -	1 -	OPG painted from here
+# J66 -	2 -	PWP painted on Nov 7 then No ID seen collecting pollen Nov 18
+# J87 -	4 -	WPP painted on Dec 2 but not recorded
+# J92 -	4 -	Y-WYW painted but never recorded
+# K15 -	2 -	OOO painted Nov 28, then No ID seen entering without pollen and vigilance Jan 29
+# K18 -	2 -	WWP painted Nov 28, then No ID seen being vigilant Jan 17 and 22
+# K26 -	2 -	OWW marked Dec 18th and No ID being vigilant Jan 17
+
+
+# read full df
+total_females_per_nest <- read_csv('Data/Behaviour/Total_number_IDs_per_nest.csv')
+
+# MOST LIBERAL ESTIMATE
+# count number solitary nests for each site
+JAM_sol_lib <- total_females_per_nest %>%
+  filter(Site == "JAM", Num_females_total_added_IDs_lib == 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 20
+KB_sol_lib <- total_females_per_nest %>%
+  filter(Site == "KB", Num_females_total_added_IDs_lib == 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 10
+# count number social nests for each site
+JAM_soc_lib <- total_females_per_nest %>%
+  filter(Site == "JAM" & Num_females_total_added_IDs_lib > 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 15
+KB_soc_lib <- total_females_per_nest %>%
+  filter(Site == "KB" & Num_females_total_added_IDs_lib > 1) %>%
+  distinct(Nest) %>%
+  as.data.frame() # 7
+
+
+## do the estimates add up to the same number of nests?
+
+# conservative estimate
+length(JAM_sol_con$Nest) + length(KB_sol_con$Nest) + length(JAM_soc_con$Nest) + length(KB_soc_con$Nest) # 41
+# liberal estimate
+length(JAM_sol_lib$Nest) + length(KB_sol_lib$Nest) + length(JAM_soc_lib$Nest) + length(KB_soc_lib$Nest) # 52
+
+# is the difference from nests that were 0 in the conservative estimate and are now 1 in the liberal because females were seen just doing vigilance?
+# compare_con <- beehav_sum %>% filter(Num_females_con == 0)
+# compare_con <- compare_con %>% select(Nest, Num_females_con)
+# compare_lib <- total_females_per_nest %>%
+#   filter(Nest %in% compare_con$Nest)
+# visually inspected to see that all the 10 nests were 0 in Num_females_con and now have 1-2 females
+
+# descriptive
+
+length(unique(beehav_sum$Nest)) # 51 nests observed 
+length(unique(total_females_per_nest$Nest)) # 52, the extra comes from J56 with 2 painted females but the nest ws never recorded 
+
+
+
+
+
+#### count how many are social or solitary, and compare with when males are leaving? Maybe a figure?
+
+
+```
+
+```{r Behviour_figures}
+
+# label by week
+library(lubridate)
+beehav_sum_rep <- beehav_sum_rep %>%
+  mutate(
+    Week_index = as.integer(difftime(floor_date(Date_beehav, "week"),
+                                     floor_date(min(Date_beehav), "week"),
+                                     units = "weeks")) + 1)
+
+# remove duplicates if there are any by arranging "social" first, then removing dupes
+beehav_sum_rep <- beehav_sum_rep %>%
+  group_by(Week_index, Nest) %>%
+  arrange(desc(Social_status_con == "social")) %>%
+  slice_head(n = 1) %>% 
+  ungroup()
+
+
+# plot nest socialty throughout the season 
+
+# make sample size for figure
+sample_size_beehav_sum_rep <- beehav_sum_rep %>%
+  count(Week_index)
+
+beehav_sum_rep %>%
+  ggplot(aes(x = Week_index, fill = Social_status_con)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Percent") +
+  geom_text(data = sample_size_beehav_sum_rep,
+            aes(x = Week_index, y = 1.05,
+                label = paste0(n)),
+            inherit.aes = FALSE) +
+  scale_fill_manual(values = c("skyblue4", "skyblue"))
+
+
+# max number of females in each nest 
+
+beehav_sum %>%
+  ggplot(aes(x = Num_females_con, fill = Site)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_manual(values = c("palevioletred", "darkolivegreen3"))
+
+total_females_per_nest %>%
+  ggplot(aes(x = Num_females_total_added_IDs_lib, fill = Site)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_manual(values = c("palevioletred", "darkolivegreen3"))
+
+
+# Number females over time in social nests conservative estimate
+beehav_sum_rep %>%
+  filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
+  ggplot(aes(x = Week_index, y = Num_females_con, colour = Nest, fill = Nest)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 4)
+
+# Number females over time in social nests liberal estimate
+beehav_sum_rep %>%
+  filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
+  ggplot(aes(x = Week_index, y = Num_females_mod, colour = Nest, fill = Nest)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 4)
+
+# plot total number of nest sociality
+
+beehav_sum_rep %>%
+  ggplot(aes(x = Site, fill = Social_status_con)) +
+  geom_bar(position = "stack") +
+  scale_fill_manual(values = c("skyblue4", "skyblue"))
+
+
+```
+
+```{r Pollen_and_Sociality}
+
+## Combine dataframes
+
+# Behaviour data
+# first, inspect IDs of 
+list(unique(beehav$Bee_ID))
+# filter out No IDs cause I only have pollen from known bees
+beehav_known <- beehav %>%
+  filter(!str_detect(Bee_ID, "No ID"),
+         Bee_ID != "Unknown",
+         Bee_ID != "Males",
+         Bee_ID != "Male")
+# order and inspect
+beehav_known <- beehav_known[order(beehav_known$Bee_ID),]
+list(unique(beehav_known$Bee_ID))
+# combine ID with site in case the same ID was used for both sites
+beehav_known$Bee_ID <- as.character(beehav_known$Bee_ID)
+beehav_known$Bee_ID <- paste(beehav_known$Site, beehav_known$Bee_ID, sep = '_') 
+table(beehav_known$Bee_ID) 
+
+# Pollen data
+list(unique(pollen$Bee_ID))
+
+# before merging dfs, compare the IDs between them
+# pollen list
+pollen_IDs_list <- as.data.frame(pollen$Bee_ID)
+colnames(pollen_IDs_list) <- "bee_ID"
+pollen_IDs_list <- distinct(pollen_IDs_list)
+# behaviour list
+beehav_IDs_list <- as.data.frame(beehav_known$Bee_ID)
+colnames(beehav_IDs_list) <- "bee_ID"
+beehav_IDs_list <- distinct(beehav_IDs_list)
+# compare
+ID_comparison <- data.frame(
+  Bee_ID = union(beehav_IDs_list$bee_ID, pollen_IDs_list$bee_ID),
+  Beehav_data = union(beehav_IDs_list$bee_ID, pollen_IDs_list$bee_ID) %in% beehav_IDs_list$bee_ID,
+  Pollen_sample = union(beehav_IDs_list$bee_ID, pollen_IDs_list$bee_ID) %in% pollen_IDs_list$bee_ID)
+
+# show bees with both data
+bees_both_data <- ID_comparison %>% filter(Beehav_data == TRUE & Pollen_sample == TRUE)
+
+# check if the core code (three thorax colours) are the same
+ID_comparison <- ID_comparison %>%
+  mutate(
+    code = str_extract(Bee_ID, "(?<=[_-])[A-Z]{3}"))  # 3 caps after "_" or "-"
+
+# manually scan to see that all duplciates are from different sites
+ID_comparison %>%
+  filter(!is.na(code)) %>%
+  group_by(code) %>%
+  filter(n() > 1) %>%
+  arrange(code) # looking good
+
+# match up the individual IDs from the pollen and behaviour dfs
+
+# if the bee ID is in the bees_both_both, then extract all their rows from pollen data, and all of the nest IDs from beehav
+
+pollen_beehav <- pollen %>%
+  filter(Bee_ID %in% bees_both_data$Bee_ID)
+
+# assing bees the Nest IDs in the pollen data
+nest_IDs_for_pollen_samples <- beehav_known %>% select(Nest, Bee_ID)
+# remove duplicates
+nest_IDs_for_pollen_samples <- distinct(nest_IDs_for_pollen_samples) 
+# join
+pollen_beehav <- left_join(pollen_beehav, nest_IDs_for_pollen_samples)
+# move Nest column to first
+pollen_beehav <- pollen_beehav %>%
+  select(Nest, everything())
+
+# if bees are in both dfs, print beehav_sum for just those bees to manually inspect
+nests_with_soliaty_labels_for_pollen <- beehav_sum %>%
+  filter(Nest %in% pollen_beehav$Nest)
+
+# if the bee was ever in a nest labelled social, say they were social
+pollen_beehav <- left_join(pollen_beehav, nests_with_soliaty_labels_for_pollen)
+
+# how many pollen samples and nests do we have pollen and behaviour data for?
+length(unique(pollen_beehav$Slide_code)) # 45
+length(unique(pollen_beehav$Nest)) # 22
+
+### then label nest as social or solitary for when a pollen sample was collected 
+
+
+```
+
+```{r Pollen_and_Sociality_figures}
+
+# sample size
+pollen_beehav %>%
+  group_by(Social_status_con) %>%
+  summarise(n_samples = n_distinct(Slide_code))
+
+# pollen diversity per sociality 
+pollen_beehav %>% 
+  group_by(Slide_code) %>% 
+  ggplot(aes(x = Social_status_con, y = Num_of_families, fill = Social_status_con )) + 
+  geom_violin() + 
+  scale_fill_manual(values = c("skyblue4", "skyblue")) +
+  labs(y = "Number of plant families per pollen sample")
+
+
+# bees with multiple samples for social nests
+pollen_beehav %>% 
+  filter(Num_of_samples > 1 & Social_status_con == "social") %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +  
+  labs(x = "Date", y = "Proportion of pollen", title = "social nests") +
+  facet_wrap(~ Bee_ID, scales = "free_x") 
+
+# bees with multiple samples for solitary nests
+pollen_beehav %>% 
+  filter(Num_of_samples > 1 & Social_status_con == "solitary") %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +  
+  labs(x = "Date", y = "Proportion of pollen", title = "solitary nests") +
+  facet_wrap(~ Bee_ID, scales = "free_x") 
 
 ```

@@ -41,7 +41,7 @@ J-189,Plantaginaceae,Plantago ,243
 J-189,Ranunculaceae,Ranunculus,3
 J-189,Asteraceae,Type 1,37
 J-189,Caryophyllaceae,Not specified,17
-J-149,Ranunculaceae,Ranunculus,280
+J-149,Ranunculaceae,Ranunculus,279
 J-149,Asteraceae,Type 1,19
 J-149,Plantaginaceae,Plantago ,2
 J-279,Asteraceae,Type 1,298
@@ -52,7 +52,7 @@ K-273,Polygonaceae,Muehlenbeckia,292
 K-273,Ericaceae,Rhododendron,8
 J-156,Amaryllidaceae,Not specified,300
 J-202,Argophyllaceae,Corokia,300
-J-162,Ranunculaceae,Ranunculus,293
+J-162,Ranunculaceae,Ranunculus,193
 J-162,Asteraceae,Type 1,46
 J-162,Caryophyllaceae,Not specified,17
 J-162,Plantaginaceae,Plantago ,44
@@ -78,7 +78,7 @@ J-213,Grass,Not specified,2
 K-266,Polygonaceae,Muehlenbeckia,94
 K-266,Unknown 2,Type 2,206
 J-147,Asteraceae,Cichorieae,1
-J-147,Ranunculaceae,Ranunculus,265
+J-147,Ranunculaceae,Ranunculus,264
 J-147,Asteraceae,Type 1,34
 J-147,Plantaginaceae,Plantago ,1
 J-190,Plantaginaceae,Plantago ,214
@@ -111,7 +111,7 @@ J-230,Asteraceae,Type 1,4
 J-230,Plantaginaceae,Plantago ,3
 J-271,Plantaginaceae,Plantago ,300
 J-290,Ranunculaceae,Ranunculus,27
-J-290,Asteraceae,Type 1,266
+J-290,Asteraceae,Type 1,265
 J-290,Plantaginaceae,Plantago ,8
 J-143,Ranunculaceae,Ranunculus,8
 J-143,Grass,Not specified,9
@@ -127,7 +127,7 @@ J-235,Brassicaceae,Not specified,231
 J-235,Asteraceae,Type 1,21
 J-235,Caryophyllaceae,Not specified,4
 J-235,Plantaginaceae,Plantago ,15
-K-261,Unknown 1,Type 1,233
+K-261,Unknown 1,Type 1,230
 K-153,Unknown 2,Type 2,299
 J-243,Asteraceae,Type 1,239
 J-243,Ranunculaceae,Ranunculus,61
@@ -164,7 +164,7 @@ J-267,Ranunculaceae,Ranunculus,295
 J-113,Rosaceae,Rubus,188
 J-113,Caprifoliaceae,Leycesteria,112
 J-164,Rosaceae,Rubus,118
-J-164,Brassicaceae,Brassicaceae,183
+J-164,Brassicaceae,Brassicaceae,182
 J-219,Rosaceae,Rubus,299
 J-219,Ranunculaceae,Ranunculus,1
 J-254,Rosaceae,Rubus,300
@@ -179,7 +179,7 @@ J-201,Ranunculaceae,Ranunculus,12
 K-153,Polygonaceae,Muehlenbeckia,1
 J-235,Unknown 5,Type 5,29
 K-242,Polygonaceae,Muehlenbeckia,300
-K-261,Polygonaceae,Muehlenbeckia,77
+K-261,Polygonaceae,Muehlenbeckia,70
 J-116,Unknown 6,Type 6,70
 J-170,Unknown 6,Type 6,300
 K-146,Solanaceae,Solanum,70
