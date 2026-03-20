@@ -1,0 +1,220 @@
+---
+title: "02_Figures"
+format: html
+editor: visual
+---
+
+```{r Load}
+
+library(tidyverse)
+library(ggplot2)
+theme_set(theme_classic())
+
+pollen <- read_csv('Data/Pollen_and_Surveys/Pollen_data_cleaned.csv')
+beehav <- read_csv('Data/Behaviour/Behaviour_data_cleaned.csv')
+pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
+
+```
+
+
+
+```{r Pollen_figures}
+
+
+# make date labels for the figure
+pollen <- pollen %>%
+  mutate(
+    Date_label  = format(Date_pollen, "%b %d"),                    
+    Date_label  = factor(Date_label, levels = format(sort(unique(Date_pollen)), "%b %d")))
+
+# reorder the pollen counts within each bee from smallest to largest pollen count
+pollen <- pollen %>%
+  group_by(Bee_ID, Date_pollen) %>%
+  arrange(Count)
+
+# bees with multiple samples 
+pollen %>% 
+  filter(Num_of_samples > 1) %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +  
+  labs(x = "Date", y = "Proportion of pollen") +
+  facet_wrap(~ Bee_ID, scales = "free_x") 
+
+# bees with 1 sample
+pollen %>%
+  filter(Num_of_samples < 2) %>%
+  mutate(Label = paste0(Bee_ID, " (", Date_label, ")")) %>%
+  ggplot(aes(x = reorder(Label, Date_pollen), y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +
+  labs(x = "Individual ID (Date)", y = "Proportion of pollen") +
+  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
+
+
+# pollen types bees collected, summary 
+
+pollen %>% 
+  ggplot(aes(x = Site, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill")
+
+
+```
+
+
+```{r Behviour_figures}
+
+# label by week
+library(lubridate)
+beehav_sum_rep <- beehav_sum_rep %>%
+  mutate(
+    Week_index = as.integer(difftime(floor_date(Date_beehav, "week"),
+                                     floor_date(min(Date_beehav), "week"),
+                                     units = "weeks")) + 1)
+
+# remove duplicates within the same week if there are any by arranging "social" first, then removing dupes
+beehav_sum_weekly <- beehav_sum_rep %>%
+  group_by(Week_index, Nest) %>%
+  arrange(desc(Num_females_con)) %>%
+  slice_head(n = 1) %>% 
+  ungroup()
+
+
+# plot nest socialty throughout the season 
+
+# make sample size for figure
+sample_size_beehav_sum_rep <- beehav_sum_weekly %>%
+  count(Week_index)
+
+
+# con
+beehav_sum_weekly %>%
+  ggplot(aes(x = Week_index, fill = Social_status_con)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Percent") +
+  geom_text(data = sample_size_beehav_sum_rep,
+            aes(x = Week_index, y = 1.05,
+                label = paste0(n)),
+            inherit.aes = FALSE) +
+  scale_fill_manual(values = c("skyblue4", "skyblue"))
+
+# lib
+beehav_sum_weekly %>%
+  ggplot(aes(x = Week_index, fill = Social_status_lib)) +
+  geom_bar(position = "fill") +
+  scale_y_continuous(labels = scales::percent) +
+  labs(y = "Percent") +
+  geom_text(data = sample_size_beehav_sum_rep,
+            aes(x = Week_index, y = 1.05,
+                label = paste0(n)),
+            inherit.aes = FALSE) +
+  scale_fill_manual(values = c("skyblue4", "skyblue"))
+
+
+
+# max number of females in each nest 
+# Conservative estimate
+beehav_sum %>%
+  filter(Num_females_con != 0) %>% 
+  ggplot(aes(x = Num_females_con, fill = Site)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_manual(values = c("palevioletred", "darkolivegreen3"))
+# Liberal estimate
+total_females_per_nest %>%
+  ggplot(aes(x = Num_females_total_added_IDs_lib, fill = Site)) +
+  geom_bar(position = 'dodge') +
+  scale_fill_manual(values = c("palevioletred", "darkolivegreen3"))
+
+# average?
+beehav_sum %>% 
+  filter(Num_females_con != 0) %>% 
+  summarise(mean = mean(Num_females_con))
+total_females_per_nest %>% 
+  filter(Num_females_total_added_IDs_lib != 0) %>% 
+  summarise(mean = mean(Num_females_total_added_IDs_lib))
+
+
+# Number females over time in social nests conservative estimate
+beehav_sum_weekly %>%
+  filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
+  ggplot(aes(x = Week_index, y = Num_females_con, colour = Nest, fill = Nest)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 4)
+
+# Number females over time in social nests moderate estimate (same as liberal)
+beehav_sum_weekly %>%
+  filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
+  ggplot(aes(x = Week_index, y = Num_females_mod, colour = Nest, fill = Nest)) +
+  geom_line() +
+  geom_point() +
+  ylim(0, 4)
+
+
+
+# plot total number of nest sociality
+# conservative
+beehav_sum %>%
+  filter(Num_females_con != 0) %>% 
+  ggplot(aes(x = Site, fill = Social_status_con)) +
+  geom_bar(position = "stack") +
+  scale_fill_manual(values = c("skyblue4", "skyblue"))
+# moderate same as conservative
+
+# liberal
+total_females_per_nest <- total_females_per_nest %>% mutate(Social_status_most_lib = ifelse(Num_females_total_added_IDs_lib >1, 'social', 'solitary'))
+  
+  
+  
+  
+total_females_per_nest %>% 
+  ggplot(aes(x = Site, fill = Social_status_most_lib)) +
+  geom_bar(position = "stack") +
+  scale_fill_manual(values = c("skyblue4", "skyblue"))
+
+
+```
+
+
+```{r Pollen_and_Sociality_figures}
+
+# sample size
+pollen_beehav %>%
+  group_by(Social_status_con) %>%
+  summarise(n_samples = n_distinct(Slide_code))
+
+# pollen diversity per sociality 
+pollen_beehav %>% 
+  group_by(Slide_code) %>% 
+  ggplot(aes(x = Social_status_con, y = Num_of_families, fill = Social_status_con )) + 
+  geom_violin() + 
+  scale_fill_manual(values = c("skyblue4", "skyblue")) +
+  labs(y = "Number of plant families per pollen sample")
+
+
+# social nests
+pollen_beehav %>% 
+  filter(Social_status_con == "social") %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +  
+  labs(x = "Date", y = "Proportion of pollen", title = "social nests") +
+  facet_wrap(~ Bee_ID, scales = "free_x") 
+
+# solitary nests
+pollen_beehav %>% 
+  filter(Social_status_con == "solitary") %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +  
+  labs(x = "Date", y = "Proportion of pollen", title = "solitary nests") +
+  facet_wrap(~ Bee_ID, scales = "free_x")
+
+
+```
+
+
+
+
+
+
+
+
+

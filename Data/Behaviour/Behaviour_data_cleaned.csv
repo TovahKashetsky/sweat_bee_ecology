@@ -1,0 +1,163 @@
+"","Nest","Site","Bee_ID","Behaviour","Num_females_con","Num_females_mod","Num_females_lib","videos","Date_beehav"
+"1","J00","JAM","PiBP","pollen collection",1,1,1,"GP2_nov25",2024-11-25
+"2","J100","JAM","W-OWW","pollen collection",1,1,1,"SD1_jan16",2025-01-16
+"3","J100","JAM","No ID  65","vigilance",2,3,3,"SD3_feb4",2025-02-04
+"4","J100","JAM","No ID  66","pollen collection, vigilance",2,3,3,"SD3_feb4",2025-02-04
+"5","J100","JAM","W-OWW","pollen collection",2,3,3,"SD3_feb4",2025-02-04
+"6","J11","JAM","Unknown","vigilance",0,1,1,"GP1_dec10",2024-12-10
+"7","J15","JAM","GGW","pollen collection",1,1,1,"GP4_nov19",2024-11-19
+"8","J16","JAM","PrBP-W","pollen collection, vigilance",1,1,1,"GP2_dec2",2024-12-02
+"9","J18","JAM","No ID  4","vigilance and/or pollen collection",2,3,3,"GP1_nov14",2024-11-14
+"10","J18","JAM","No ID  5","pollen collection",2,3,3,"GP1_nov14",2024-11-14
+"11","J18","JAM","No ID  6","vigilance",2,3,3,"GP1_nov14",2024-11-14
+"12","J18","JAM","No ID  7","vigilance",1,3,3,"C1_nov18",2024-11-18
+"13","J18","JAM","No ID  8","vigilance and/or pollen collection",1,3,3,"C1_nov18",2024-11-18
+"14","J18","JAM","W-WWG","vigilance and/or pollen collection",1,3,3,"C1_nov18",2024-11-18
+"15","J18","JAM","No ID  12","leaving nest",0,1,2,"C2_nov18",2024-11-18
+"16","J18","JAM","No ID  13","vigilance",0,1,2,"C2_nov18",2024-11-18
+"17","J18","JAM","No ID  14","pollen collection, vigilance",2,2,2,"GP1_nov19",2024-11-19
+"18","J18","JAM","W-WWG","pollen collection",2,2,2,"GP1_nov19",2024-11-19
+"19","J18","JAM","No ID  16","pollen collection, vigilance",2,2,2,"GP4_nov19",2024-11-19
+"20","J18","JAM","W-WWG","pollen collection",2,2,2,"GP4_nov19",2024-11-19
+"21","J18","JAM","G-OGP","pollen collection, vigilance",2,2,2,"C2_nov25",2024-11-25
+"22","J18","JAM","W-WWG","pollen collection",2,2,2,"C2_nov25",2024-11-25
+"23","J18","JAM","Unknown markings","pollen collection, vigilance",1,1,1,"GP3_dec2",2024-12-02
+"24","J18","JAM","Unknown","digging",1,1,1,"GP2_dec5",2024-12-05
+"25","J18","JAM","Unknown","vigilance",0,1,1,"C1_dec17",2024-12-17
+"26","J18","JAM","Unknown","vigilance",1,1,1,"SD1_jan6",2025-01-06
+"27","J18","JAM","No ID  25","entering without pollen",0,2,2,"SD4_jan7",2025-01-07
+"28","J18","JAM","Unknown","vigilance",0,2,2,"SD4_jan7",2025-01-07
+"29","J18","JAM","No ID  32","vigilance",0,2,2,"SD1_jan15",2025-01-15
+"30","J18","JAM","No ID  33","vigilance",0,2,2,"SD2_jan15",2025-01-15
+"31","J18","JAM","No ID  37","vigilance and/or pollen collection",1,2,2,"SD3_jan16",2025-01-16
+"32","J18","JAM","No ID  38","vigilance and/or pollen collection",1,2,2,"SD3_jan16",2025-01-16
+"33","J19","JAM","No ID  3","pollen collection",1,1,1,"C1_nov12",2024-11-12
+"34","J26","JAM","OBO-P","pollen collection, vigilance",1,1,1,"GP3_nov19",2024-11-19
+"35","J26","JAM","OBO-P","pollen collection",1,1,1,"GP1_nov25",2024-11-25
+"36","J26","JAM","No ID  20","pollen collection",1,1,1,"C3_dec17",2024-12-17
+"37","J26","JAM","No ID  23","leaving nest",1,1,2,"SD2_jan6",2025-01-06
+"38","J26","JAM","No ID  24","pollen collection",1,1,2,"SD2_jan6",2025-01-06
+"39","J26","JAM","Male",NA,0,0,0,"SD4_jan15",2025-01-15
+"40","J26","JAM","Male",NA,0,0,0,"SD1_jan28",2025-01-28
+"41","J26","JAM","No ID  62","vigilance",0,1,1,"SD1_feb3",2025-02-03
+"42","J32","JAM","Unknown","vigilance",0,1,1,"C1_dec17",2024-12-17
+"43","J32","JAM","GPP","leaving nest",1,1,1,"SD1_jan6",2025-01-06
+"44","J32","JAM","GPP","pollen collection",1,1,1,"SD3_jan7",2025-01-07
+"45","J32","JAM","No ID  34","vigilance",0,1,1,"SD1_jan15",2025-01-15
+"46","J36","JAM","No ID  9","vigilance",0,1,1,"GP2_nov18",2024-11-18
+"47","J36","JAM","No ID  15","vigilance, digging",1,1,1,"GP3_nov19",2024-11-19
+"48","J38","JAM","Unknown","vigilance",0,1,1,"SD1_jan6",2025-01-06
+"49","J42","JAM","POO","pollen collection, vigilance",1,1,1,"GP1_nov18",2024-11-18
+"50","J42","JAM","POO","pollen collection, vigilance",1,1,1,"C2_nov19",2024-11-19
+"51","J44","JAM","No ID  17","pollen collection",1,1,1,"GP4_nov25",2024-11-25
+"52","J44","JAM","No ID  27","leaving nest",0,0,1,"SD1_jan7",2025-01-07
+"53","J44","JAM","No ID  28","leaving nest",0,0,1,"SD5_jan7",2025-01-07
+"54","J44","JAM","Male",NA,0,0,0,"SD5_jan28",2025-01-28
+"55","J44","JAM","No ID  63","vigilance",0,1,1,"SD5_feb3",2025-02-03
+"56","J45","JAM","No ID  10","pollen collection",1,1,1,"GP4_nov18",2024-11-18
+"57","J49","JAM","WPW","pollen collection",1,1,1,"C1_nov12",2024-11-12
+"58","J50","JAM","OOO","vigilance, digging",1,1,1,"C2_nov18",2024-11-18
+"59","J50","JAM","OOO","pollen collection, vigilance",1,1,1,"GP2_nov25",2024-11-25
+"60","J51","JAM","Y-PPY","pollen collection",1,1,1,"SD3_jan6",2025-01-06
+"61","J51","JAM","Y-PPY","Pollen collection",1,1,1,"SD4_jan16",2025-01-16
+"62","J51","JAM","Y-PPY","pollen collection, vigilance",1,1,1,"SD5_jan16",2025-01-16
+"63","J53","JAM","No ID  1","leaving nest",0,0,1,"GP1_nov7",2024-11-07
+"64","J54","JAM","WWO","pollen collection, vigilance",1,1,1,"GP3_nov7",2024-11-07
+"65","J54","JAM","No ID  18","vigilance",0,1,1,"C1_nov25",2024-11-25
+"66","J54","JAM","Males",NA,0,0,0,"C2_dec17",2024-12-17
+"67","J54","JAM","No ID  29","vigilance, leaving",0,1,1,"SD1_jan7",2025-01-07
+"68","J57","JAM","PPB","pollen collection",1,1,1,"GP1_nov7",2024-11-07
+"69","J58","JAM","PPW","pollen collection",1,1,1,"GP1_nov7",2024-11-07
+"70","J58","JAM","PPW","pollen collection",1,1,1,"GP2_nov12",2024-11-12
+"71","J58","JAM","PPW","pollen collection, vigilance",1,1,1,"GP4_nov25",2024-11-25
+"72","J58","JAM","PPW","pollen collection",1,1,1,"SD1_jan7",2025-01-07
+"73","J58","JAM","PPW","pollen collection",1,1,1,"SD5_jan7",2025-01-07
+"74","J58","JAM","No ID  55","vigilance, leaving",0,1,1,"SD5_jan28",2025-01-28
+"75","J60","JAM","Males",NA,0,0,0,"SD1_jan22",2025-01-22
+"76","J60","JAM","Males",NA,0,0,0,"SD2_jan28",2025-01-28
+"77","J65","JAM","GOO","pollen collection",1,1,1,"C1_nov25",2024-11-25
+"78","J65","JAM","GOO","pollen collection, vigilance, digging",1,1,1,"SD3_jan15",2025-01-15
+"79","J65","JAM","Unknown","vigilance",0,1,1,"SD4_jan16",2025-01-16
+"80","J65","JAM","Unknown","vigilance, digging",1,1,1,"SD5_jan16",2025-01-16
+"81","J66","JAM","No ID  2","pollen collection",1,1,1,"GP2_nov7",2024-11-07
+"82","J66","JAM","No ID  11","pollen collection, vigilance",1,1,1,"GP2_nov18",2024-11-18
+"83","J67","JAM","POG","pollen collection",1,1,1,"C1_nov12",2024-11-12
+"84","J67","JAM","Male",NA,0,0,0,"SD5_feb4",2025-02-04
+"85","J71","JAM","POP","pollen collection",1,1,1,"GP2_nov7",2024-11-07
+"86","J71","JAM","POP","near nest",1,1,1,"GP3_nov18",2024-11-18
+"87","J75","JAM","BBO","pollen collection, vigilance, digging",1,1,1,"GP1_dec2",2024-12-02
+"88","J75","JAM","GWG","pollen collection",1,1,1,"GP1_dec5",2024-12-05
+"89","J80","JAM","WBP","leaving nest",1,1,1,"GP3_nov25",2024-11-25
+"90","J80","JAM","WBP","vigilance",1,1,1,"C1_dec5",2024-12-05
+"91","J87","JAM","No ID  21","pollen collection",1,1,1,"C1_dec17",2024-12-17
+"92","J87","JAM","No ID  22","Pollen collection",1,1,1,"SD1_jan6",2025-01-06
+"93","J87","JAM","No ID  30","vigilance",2,4,4,"SD3_jan7",2025-01-07
+"94","J87","JAM","No ID  31","vigilance",2,4,4,"SD3_jan7",2025-01-07
+"95","J87","JAM","P-PBG","entering without pollen",2,4,4,"SD3_jan7",2025-01-07
+"96","J87","JAM","Y-YPP","leaving nest",2,4,4,"SD3_jan7",2025-01-07
+"97","J87","JAM","No ID  35","vigilance",1,2,2,"SD1_jan15",2025-01-15
+"98","J87","JAM","P-PBG","pollen collection",1,2,2,"SD1_jan15",2025-01-15
+"99","J87","JAM","Y-YPP","vigilance",1,2,2,"SD1_jan15",2025-01-15
+"100","J87","JAM","No ID  36","vigilance",1,2,2,"SD2_jan15",2025-01-15
+"101","J87","JAM","P-PBG","pollen collection",1,2,2,"SD2_jan15",2025-01-15
+"102","J87","JAM","Y-YPP","vigilance",1,2,2,"SD2_jan15",2025-01-15
+"103","J87","JAM","No ID  39","vigilance",0,1,1,"SD3_jan16",2025-01-16
+"104","J87","JAM","Y-YPP","vigilance",1,1,1,"SD2_jan22",2025-01-22
+"105","J87","JAM","No ID  54","vigilance, leaving",0,2,2,"SD3_jan28",2025-01-28
+"106","J87","JAM","Y-YPP","vigilance",1,2,2,"SD3_jan28",2025-01-28
+"107","J87","JAM","No ID  68","vigilance",0,1,1,"SD2_feb4",2025-02-04
+"108","J89","JAM","G-WGW","pollen collection",1,1,1,"SD6_jan7",2025-01-07
+"109","J90","JAM","No ID  49","leaving nest",1,1,2,"SD5_jan22",2025-01-22
+"110","J90","JAM","G-GOW","pollen collection",1,1,2,"SD5_jan22",2025-01-22
+"111","J90","JAM","No ID  64","vigilance",0,1,1,"SD2_feb3",2025-02-03
+"112","J90","JAM","Males",NA,0,0,0,"SD1_feb4",2025-02-04
+"113","J91","JAM","No ID  40","vigilance and/or pollen collection",3,4,4,"SD2_jan16",2025-01-16
+"114","J91","JAM","No ID  41","vigilance and/or pollen collection",3,4,4,"SD2_jan16",2025-01-16
+"115","J91","JAM","P-OOP-O","pollen collection",3,4,4,"SD2_jan16",2025-01-16
+"116","J91","JAM","W-PWO","pollen collection, vigilance",3,4,4,"SD2_jan16",2025-01-16
+"117","J91","JAM","No ID  52","pollen collection, vigilance",3,4,4,"SD5_jan22",2025-01-22
+"118","J91","JAM","No ID  53","vigilance",3,4,4,"SD5_jan22",2025-01-22
+"119","J91","JAM","P-OOP-O","leaving nest",3,4,4,"SD5_jan22",2025-01-22
+"120","J91","JAM","W-PWO","pollen collection",3,4,4,"SD5_jan22",2025-01-22
+"121","J91","JAM","No ID  61","vigilance",0,3,3,"SD2_feb3",2025-02-03
+"122","J91","JAM","P-OOP-O","vigilance",0,3,3,"SD2_feb3",2025-02-03
+"123","J91","JAM","W-PWO","vigilance",0,3,3,"SD2_feb3",2025-02-03
+"124","J91","JAM","W-PWO","vigilance",0,1,1,"SD1_feb4",2025-02-04
+"125","J91","JAM","No ID  67","vigilance",0,2,2,"SD5_feb4",2025-02-04
+"126","J91","JAM","W-PWO","vigilance",0,2,2,"SD5_feb4",2025-02-04
+"127","J92","JAM","No ID  42","pollen collection, vigilance",2,2,2,"SD3_jan16",2025-01-16
+"128","J92","JAM","O-OBB","vigilance",2,2,2,"SD3_jan16",2025-01-16
+"129","J92","JAM","No ID  50","pollen collection",2,2,2,"SD2_jan22",2025-01-22
+"130","J92","JAM","O-OBB","pollen collection",2,2,2,"SD2_jan22",2025-01-22
+"131","J92","JAM","No ID  56","pollen collection",3,3,3,"SD3_jan28",2025-01-28
+"132","J92","JAM","B-BPP","pollen collection",3,3,3,"SD3_jan28",2025-01-28
+"133","J92","JAM","O-OBB","pollen collection",3,3,3,"SD3_jan28",2025-01-28
+"134","J92","JAM","B-BPP","pollen collection",2,2,2,"SD3_feb3",2025-02-03
+"135","J92","JAM","O-OBB","pollen collection, vigilance",2,2,2,"SD3_feb3",2025-02-03
+"136","J98","JAM","Unknown","vigilance",0,1,1,"SD3_jan28",2025-01-28
+"137","K11","KB","PWP","leaving nest",1,1,1,"GP2_dec3",2024-12-03
+"138","K13","KB","No ID  19","leaving nest",2,2,2,"C2_dec3",2024-12-03
+"139","K13","KB","WPP","pollen collection",2,2,2,"C2_dec3",2024-12-03
+"140","K13","KB","No ID  43","entering without pollen",0,1,1,"SD1_jan17",2025-01-17
+"141","K14","KB","GGP","leaving nest",1,1,1,"GP1_dec3",2024-12-03
+"142","K15","KB","No ID  59","entering without pollen",0,1,1,"SD1_jan29",2025-01-29
+"143","K15","KB","No ID  60","vigilance",0,1,1,"SD1_jan29",2025-01-29
+"144","K18","KB","No ID  44","vigilance",0,1,1,"SD5_jan17",2025-01-17
+"145","K18","KB","No ID  51","vigilance",0,1,1,"SD2_jan22",2025-01-22
+"146","K19","KB","Unknown","vigilance",0,1,1,"SD1_dec18",2024-12-18
+"147","K2","KB","PPP","leaving nest",1,1,1,"GP1_nov26",2024-11-26
+"148","K23","KB","Unknown","vigilance",0,1,1,"SD2_dec18",2024-12-18
+"149","K23","KB","PWW","enters nest after being marked",1,1,1,"SD5_dec18",2024-12-18
+"150","K23","KB","No ID  45","pollen collection",1,1,1,"SD1_jan17",2025-01-17
+"151","K23","KB","No ID  46","pollen collection",1,1,1,"SD5_jan17",2025-01-17
+"152","K24","KB","No ID  57","vigilance, digging",1,1,1,"SD2_jan29",2025-01-29
+"153","K25","KB","WGW","pollen collection, vigilance",1,1,1,"GP3_dec3",2024-12-03
+"154","K26","KB","No ID  47","vigilance",0,1,1,"SD3_jan17",2025-01-17
+"155","K29","KB","OPO","enters nest after being marked",1,1,1,"SD5_dec18",2024-12-18
+"156","K4","KB","OBO-P","pollen collection",1,1,1,"C2_dec3",2024-12-03
+"157","K4","KB","No ID  58","pollen collection, vigilance, digging",1,1,1,"SD3_jan29",2025-01-29
+"158","K5","KB","GGG","Pollen collection",1,1,1,"C2_dec3",2024-12-03
+"159","K6","KB","GBG","leaving nest",1,1,1,"GP3_dec3",2024-12-03
+"160","K7","KB","Unknown","vigilance",0,1,1,"SD1_jan17",2025-01-17
+"161","K8","KB","WWG","pollen collection",1,1,1,"C2_dec3",2024-12-03
+"162","K8","KB","No ID  48","vigilance, digging",1,1,1,"SD1_jan17",2025-01-17

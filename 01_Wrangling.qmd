@@ -167,6 +167,12 @@ pollen %>%
 pollen <- pollen %>% filter(Count > 3)
 
 
+## Saving wrangled data
+
+write.csv(pollen, 'Data/Pollen_and_Surveys/Pollen_data_cleaned.csv')
+
+
+
 ## Descriptive
 
 # how many individuals collected 1 pollen type vs more than one?
@@ -178,7 +184,7 @@ pollen <- pollen %>%
 
 pollen <- pollen %>%
   group_by(Bee_ID, Date_pollen) %>%
-  mutate(Num_of_subtypes = n_distinct(T=Subtype)) %>%
+  mutate(Num_of_subtypes = n_distinct(Subtype)) %>%
   ungroup()
 
 # make summary for descriptive stats
@@ -193,58 +199,6 @@ table(pollen_summary$Num_of_families)
 # if we say 95% of pollen from one family, it's 49 / 83 (counted manually)
 table(pollen_summary$Num_of_subtypes) # number of subtypes barely changes anything
 
-
-```
-
-```{r Pollen_figures}
-
-
-library(ggplot2)
-
-# make date labels for the figure
-pollen <- pollen %>%
-  mutate(
-    Date_label  = format(Date_pollen, "%b %d"),                    
-    Date_label  = factor(Date_label, levels = format(sort(unique(Date_pollen)), "%b %d")))
-
-# reorder the pollen counts within each bee from smallest to largest pollen count
-pollen <- pollen %>%
-  group_by(Bee_ID, Date_pollen) %>%
-  arrange(Count)
-
-# bees with multiple samples 
-pollen %>% 
-  filter(Num_of_samples > 1) %>% 
-  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +  
-  labs(x = "Date", y = "Proportion of pollen") +
-  facet_wrap(~ Bee_ID, scales = "free_x") 
-
-# bees with 1 sample at JAM
-pollen %>%
-  filter(Num_of_samples < 2 & Site == "JAM") %>%
-  mutate(Label = paste0(Bee_ID, " (", Date_label, ")")) %>%
-  ggplot(aes(x = reorder(Label, Date_pollen), y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +
-  labs(x = "Individual ID (Date)", y = "Proportion of pollen") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-
-# bees with 1 sample at KB
-pollen %>%
-  filter(Num_of_samples < 2 & Site == "KB") %>%
-  mutate(Label = paste0(Bee_ID, " (", Date_label, ")")) %>%
-  ggplot(aes(x = reorder(Label, Date_pollen), y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +
-  labs(x = "Individual ID (Date)", y = "Proportion of pollen") +
-  theme(axis.text.x = element_text(angle = 45, vjust = 1, hjust = 1))
-
-
-
-# pollen types bees collected, summary 
-
-pollen %>% 
-  ggplot(aes(x = Site, y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill")
 
 ```
 
@@ -268,17 +222,18 @@ beehav <- beehav %>% select(-Day, -Month, -Year)
  # conservative : pollen collection, digging and IF we know their ID, vigilance or leaving nest or entering without pollen
  # vigilance is peaking out of the nest if they do not leave for the following 2 minutes
 
-# make summary with only 1 row per nest
-beehav_sum_rep <- distinct(beehav, Nest, Num_females_con, Date_beehav, .keep_all= TRUE)
-# remove columns that don't make sense for summary df
+# make summary with only 1 row per nest with the highest number of _con _mod and lib females per date
+beehav_sum_rep <- beehav %>%
+  mutate(max_females = pmax(Num_females_lib,
+                           Num_females_mod,
+                           Num_females_con,
+                           na.rm = TRUE)) %>%
+  group_by(Nest, Date_beehav) %>%
+  slice_max(max_females, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# keep only columns that make sense for summary df
 beehav_sum_rep <- beehav_sum_rep %>% 
   select(Nest, Site, Num_females_con, Num_females_mod, Num_females_lib, Date_beehav)
-# sometimes there are two rows per date and nest combo because we filmed the nest subsequently with a second camera (e.g., after the first one died or the SD card filled up)
-# so if there are duplciate nest-date combos, remove the lowest valued Num_females_con
-beehav_sum_rep <- beehav_sum_rep %>% 
-  group_by(Nest, Date_beehav) %>% 
-  slice_max(Num_females_con, n=1) %>% 
-  ungroup
 
 # mark nests as solitary or social for each date (may end up with nests that go back and forth between solitary and social)
 beehav_sum_rep <- beehav_sum_rep %>% 
@@ -293,7 +248,7 @@ beehav_sum_rep <- beehav_sum_rep %>%
 
 beehav_sum <- beehav_sum_rep %>%
   group_by(Nest) %>%
-  arrange(desc(Num_females_con), desc(Num_females_mod), desc(Num_females_lib)) %>%
+  arrange(desc(Num_females_lib), desc(Num_females_mod), desc(Num_females_con)) %>%
   slice_head(n = 1) %>%
   ungroup()
 
@@ -304,11 +259,11 @@ beehav_sum <- beehav_sum_rep %>%
 JAM_sol_con <- beehav_sum %>%
   filter(Site == "JAM", Num_females_con == 1) %>%
   distinct(Nest) %>%
-  as.data.frame() # 24
+  as.data.frame() # 24 if zero females is not included 
 KB_sol_con <- beehav_sum %>%
   filter(Site == "KB", Num_females_con == 1) %>%
   distinct(Nest) %>%
-  as.data.frame() # 11
+  as.data.frame() # 11 if zero females is not included 
 # count number social nests for each site
 JAM_soc_con <- beehav_sum %>%
   filter(Site == "JAM", Num_females_con > 1) %>%
@@ -404,94 +359,21 @@ length(JAM_sol_lib$Nest) + length(KB_sol_lib$Nest) + length(JAM_soc_lib$Nest) + 
 #   filter(Nest %in% compare_con$Nest)
 # visually inspected to see that all the 10 nests were 0 in Num_females_con and now have 1-2 females
 
+
+## Saving wrangled data
+write.csv(beehav, 'Data/Behaviour/Behaviour_data_cleaned.csv')
+
+
+
 # descriptive
 
 length(unique(beehav_sum$Nest)) # 51 nests observed 
-length(unique(total_females_per_nest$Nest)) # 52, the extra comes from J56 with 2 painted females but the nest ws never recorded 
+length(unique(total_females_per_nest$Nest)) # 52, the extra comes from J56 with 2 painted females but the nest was never recorded 
 
-
-
-
-
-#### count how many are social or solitary, and compare with when males are leaving? Maybe a figure?
 
 
 ```
 
-```{r Behviour_figures}
-
-# label by week
-library(lubridate)
-beehav_sum_rep <- beehav_sum_rep %>%
-  mutate(
-    Week_index = as.integer(difftime(floor_date(Date_beehav, "week"),
-                                     floor_date(min(Date_beehav), "week"),
-                                     units = "weeks")) + 1)
-
-# remove duplicates if there are any by arranging "social" first, then removing dupes
-beehav_sum_rep <- beehav_sum_rep %>%
-  group_by(Week_index, Nest) %>%
-  arrange(desc(Social_status_con == "social")) %>%
-  slice_head(n = 1) %>% 
-  ungroup()
-
-
-# plot nest socialty throughout the season 
-
-# make sample size for figure
-sample_size_beehav_sum_rep <- beehav_sum_rep %>%
-  count(Week_index)
-
-beehav_sum_rep %>%
-  ggplot(aes(x = Week_index, fill = Social_status_con)) +
-  geom_bar(position = "fill") +
-  scale_y_continuous(labels = scales::percent) +
-  labs(y = "Percent") +
-  geom_text(data = sample_size_beehav_sum_rep,
-            aes(x = Week_index, y = 1.05,
-                label = paste0(n)),
-            inherit.aes = FALSE) +
-  scale_fill_manual(values = c("skyblue4", "skyblue"))
-
-
-# max number of females in each nest 
-
-beehav_sum %>%
-  ggplot(aes(x = Num_females_con, fill = Site)) +
-  geom_bar(position = 'dodge') +
-  scale_fill_manual(values = c("palevioletred", "darkolivegreen3"))
-
-total_females_per_nest %>%
-  ggplot(aes(x = Num_females_total_added_IDs_lib, fill = Site)) +
-  geom_bar(position = 'dodge') +
-  scale_fill_manual(values = c("palevioletred", "darkolivegreen3"))
-
-
-# Number females over time in social nests conservative estimate
-beehav_sum_rep %>%
-  filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
-  ggplot(aes(x = Week_index, y = Num_females_con, colour = Nest, fill = Nest)) +
-  geom_line() +
-  geom_point() +
-  ylim(0, 4)
-
-# Number females over time in social nests liberal estimate
-beehav_sum_rep %>%
-  filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
-  ggplot(aes(x = Week_index, y = Num_females_mod, colour = Nest, fill = Nest)) +
-  geom_line() +
-  geom_point() +
-  ylim(0, 4)
-
-# plot total number of nest sociality
-
-beehav_sum_rep %>%
-  ggplot(aes(x = Site, fill = Social_status_con)) +
-  geom_bar(position = "stack") +
-  scale_fill_manual(values = c("skyblue4", "skyblue"))
-
-
-```
 
 ```{r Pollen_and_Sociality}
 
@@ -578,38 +460,40 @@ length(unique(pollen_beehav$Nest)) # 22
 ### then label nest as social or solitary for when a pollen sample was collected 
 
 
+## Save wrangled data
+write.csv(pollen_beehav, 'Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
+
+
+
+
 ```
 
-```{r Pollen_and_Sociality_figures}
 
-# sample size
-pollen_beehav %>%
-  group_by(Social_status_con) %>%
-  summarise(n_samples = n_distinct(Slide_code))
+```{r Phylogeny}
 
-# pollen diversity per sociality 
-pollen_beehav %>% 
-  group_by(Slide_code) %>% 
-  ggplot(aes(x = Social_status_con, y = Num_of_families, fill = Social_status_con )) + 
-  geom_violin() + 
-  scale_fill_manual(values = c("skyblue4", "skyblue")) +
-  labs(y = "Number of plant families per pollen sample")
+library(phytools)
 
 
-# bees with multiple samples for social nests
-pollen_beehav %>% 
-  filter(Num_of_samples > 1 & Social_status_con == "social") %>% 
-  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +  
-  labs(x = "Date", y = "Proportion of pollen", title = "social nests") +
-  facet_wrap(~ Bee_ID, scales = "free_x") 
+# trying to make a lasioglossum tree to see the closest relatives of l sordidum to look up their sociality
 
-# bees with multiple samples for solitary nests
-pollen_beehav %>% 
-  filter(Num_of_samples > 1 & Social_status_con == "solitary") %>% 
-  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +  
-  labs(x = "Date", y = "Proportion of pollen", title = "solitary nests") +
-  facet_wrap(~ Bee_ID, scales = "free_x") 
+
+# load tree 
+# 
+# lasio_tree <- read.newick('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Behaviour/Lasioglossum_tree.nwk')
+# 
+# # BeeTree loads 1001 trees. The first tree is the maximum likelyhood tree, which we want, and 1000 bootstrapped samples
+# # isolate the maximum likelyhood tree
+# lasio_tree <- lasio_tree[[1]] 
+# 
+# # save it
+# jpeg(file.path(getwd(), "tree.jpg"),
+#      width = 2080, height = 8500, res = 500)
+# plot.phylo(lasio_tree,
+#            show.tip.label = TRUE,
+#            edge.width = 1,
+#            label.offset = 0.005,
+#            cex = 0.25,
+#            font = 1)
+# dev.off()
 
 ```
