@@ -1,0 +1,84 @@
+---
+title: "03_Analyses"
+format: html
+editor: visual
+---
+
+```{r Load}
+
+library(tidyverse)
+
+# polen data
+pollen_samples <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
+# nest-level data summary
+beehav_sum <- read_csv('Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
+# nest-level data all social statuses
+beehav_full <- read_csv('Data/Behaviour/Behaviour_nest_full_cleaned.csv')
+# pollen_samples and behaviour data
+pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
+
+
+
+
+```
+
+```{r Sociality}
+
+table(beehav_sum$Num_females_con)
+# ignore: 10 nests had 0 observed females partaking in nest care
+# 36 had 1 female at a given time partaking in nest care
+# 3 nests had 2 females
+# 2 nests had 3 females
+# 2+3 / 36+2+3 = 12% are social
+
+# mean number of females
+beehav_sum %>% filter(Social_status_con == 'social')
+# (2 + 2 + 2 + 3 + 3)/ 5  = 2.4
+
+# first social nest
+beehav_full %>% filter(Social_status_con == 'social')
+# 2024-11-14 
+
+# were these nests just social, or both social and solitary?
+social_nests <- beehav_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
+
+# J100: 
+ # 2025-01-16 - solitary for 1 day
+ # 2025-02-04 - social for 1 day
+
+# J18: 
+ # 2024-11-14 to 2024-11-25 - social for 12 days (solitary for one day in between)
+ # 2024-12-02 to 2025-01-16 - solitary for 45 days
+
+# J87
+ # 2024-12-17 to 2025-01-06 - solitary for 20 days
+ # 2025-01-07 - social for 1 day
+ # 2025-01-15 to 2025-02-04 - solitary for 20 days
+
+# J91
+ # 2025-01-16 to 2025-01-22 - social for 7 days
+ # not active in subsequent recordings
+
+# J92
+ # 2025-01-16 to 2025-01-28 - social for 13 days
+
+
+```
+
+```{r Pollen_Collection}
+
+## Flower constancy
+
+# how many samples are above 95% of one pollen type
+pollen_samples %>% filter(Count_scaled >= 285)
+# 46 out of 83 samples 
+
+
+## Individuals 
+
+# how many
+length(unique(pollen_samples$Bee_ID))
+# 49 individuals, 83 samples, ranges 1-4 samples per bee
+
+
+```

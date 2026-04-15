@@ -18,7 +18,7 @@ J-222,Asteraceae,Type 1,220
 J-222,Ranunculaceae,Ranunculus,6
 J-240,Ranunculaceae,Ranunculus,3
 J-240,Plantaginaceae,Plantago ,295
-J-240,Grass,Not specified,1
+J-240,Gramineae,Grass,1
 J-240,Asteraceae,Type 1,1
 J-212,Ranunculaceae,Ranunculus,300
 J-186,Ranunculaceae,Ranunculus,300
@@ -74,7 +74,7 @@ J-213,Ranunculaceae,Ranunculus,161
 J-213,Asteraceae,Type 1,55
 J-213,Asteraceae,Cichorieae,1
 J-213,Plantaginaceae,Plantago ,1
-J-213,Grass,Not specified,2
+J-213,Gramineae,Grass,2
 K-266,Polygonaceae,Muehlenbeckia,94
 K-266,Unknown 2,Type 2,206
 J-147,Asteraceae,Cichorieae,1
@@ -114,7 +114,7 @@ J-290,Ranunculaceae,Ranunculus,27
 J-290,Asteraceae,Type 1,265
 J-290,Plantaginaceae,Plantago ,8
 J-143,Ranunculaceae,Ranunculus,8
-J-143,Grass,Not specified,9
+J-143,Gramineae,Grass,9
 J-143,Plantaginaceae,Plantago ,283
 J-137,Asteraceae,Cichorieae,300
 J-203,Asteraceae,Cichorieae,96

@@ -8,6 +8,8 @@ editor: visual
 
 library(tidyverse)
 
+# pollen_samples is pollen samples from bees (pollen) wirth the abundance data (survey)
+
 ```
 
 ```{r Paint_combinations, eval = FALSE}
@@ -81,47 +83,6 @@ library(tidyverse)
 # sorted_combinations <- sort_combinations(selected_combination_lists,reduced_edge_list)
 # write.table(data.frame(all_combs[as.numeric(sorted_combinations$sorted_indices),],Mean_overlap=round(1000*as.numeric(sorted_combinations$mean_overlap))/1000,stringsAsFactors = F),file="Data/Paint_ID/Paint_IDs_rewritten.csv",col.names=T,row.names=F,quote=F,append=F)
 
-```
-
-```{r Floral_surveys}
-
-# # checking which flowers I need samples for during fieldwork
-# 
-# # load in floral survey data
-# survey <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_and_Surveys/Floral_surveys.csv')
-# 
-# # load in plant pollen sample data
-# p_pollen_samples <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_and_Surveys/Pollen_samples_plant.csv')
-# 
-# 
-# ## Make a list of pollen samples that I have
-# 
-# # organize by taxa alphabetically
-# survey <- arrange(survey, Taxa)  
-# 
-# # make first letter capital
-# survey$Taxa <- str_replace(survey$Taxa, "^\\w{1}", toupper)
-# survey$Family <- str_replace(survey$Family, "^\\w{1}", toupper)
-# p_pollen_samples$Taxa <- str_replace(p_pollen_samples$Taxa, "^\\w{1}", toupper)
-# 
-# # check the unique taxa, any diplucates from spelling erorrs? nothing jumpes out
-# unique(survey$Taxa)
-# # rename column
-# survey <- survey %>% rename(Taxa_with_notes = Taxa)
-# # take only first word (e.g., ignore "fruiting" or species names)
-# survey <- mutate(survey, Taxa = word(Taxa_with_notes, 1))
-# p_pollen_samples <- mutate(p_pollen_samples, Taxa = word(Taxa, 1))
-# 
-# # join data frames
-# p_sample_list <- right_join(survey, p_pollen_samples)
-# # organize by taxa alphabetically
-# p_sample_list <- arrange(p_sample_list, Taxa)  
-# 
-# write_csv(p_sample_list, 'Data/Pollen_and_Surveys/Pollen_sample_list.csv')
-
-```
-
-```{r Bee_pollen_samples}
 
 # how many bees did I mark?
 IDs_JAM <- read_csv('Data/Paint_ID/Paint_IDs_JAM.csv')
@@ -130,6 +91,180 @@ length(unique(IDs_JAM$Bee_ID)) # 82
 length(unique(IDs_KB$Bee_ID)) # 32 
 # 114 in total
 
+# I caught 49, so 65 were never recaptured
+# 43% recapture for pollen
+
+```
+
+```{r Floral_surveys}
+
+# load in floral survey data
+survey <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecology/Data/Pollen_and_Surveys/Floral_surveys.csv')
+
+# make first letter capital
+survey$Subtype <- str_replace(survey$Subtype, "^\\w{1}", toupper)
+survey$Family <- str_replace(survey$Family, "^\\w{1}", toupper)
+
+# check the unique taxa, any diplucates from spelling erorrs? nothing jumpes out
+unique(survey$Subtype)
+# take only first word (e.g., ignore "fruiting" because the survey was mid season, so coudlve been fruiting in early season)
+survey <- mutate(survey, Subtype = word(Subtype, 1))
+
+# inspect
+table(survey$Abundance)
+# 'not seen' and 'not seen but abundant' mean that plants were in Janice's list of plants on her property, but I did not see them. Couldve been in the hilled forrest that I tried my best to dredge through 
+# keep not seen plants in for now
+
+# first make all numbers
+survey <- survey %>% mutate(Abundance_number = ifelse(Abundance == 'rare', 1, 
+                                                        ifelse(Abundance == 'uncommon', 2, 
+                                                            ifelse(Abundance == 'available', 3, 
+                                                                  ifelse(Abundance == 'abundant', 4,
+                                                                        ifelse(Abundance == 'extremely abundant', 5, 0 ))))))
+
+
+# rename abundance column
+survey <- survey %>% rename(Abundance_original = Abundance_number)
+
+
+## Make sure the 50m is included in the 200m
+
+# JAM early survey
+JAM_50_early <- survey %>% filter(Site == 'JAM' & Range == '50m' & Season == 'early/mid')
+JAM_200_early_v1 <- survey %>% filter(Site == 'JAM' & Range == '200m' & Season == 'early/mid')
+# delete duplicates within the 50 and 200m 
+# not perfect to order by highest abundance instead of compiling them, but I already compilled them motly in the field (e.g., roses on day X could have been uncommon, then the next day I wrote tham as available because I compilled the current survey with the previous day)
+JAM_50_early <- JAM_50_early %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+JAM_200_early_v1 <- JAM_200_early_v1 %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# what are missing in the 200 from 50?
+anti_join(JAM_50_early, JAM_200_early_v1, by = c('Subtype', 'Family'))
+# minus one level for each plant in the 50m df because it's being considered in the context of 200 instead of 50. E.g., honeysuckle is uncommon for 50m but rare for 200m. Exccept keep rare and extremly abundanct as is
+# I went through the more abundant plants (buttercup, capselle, etc) and decided to keep as 5
+JAM_50_early <- JAM_50_early %>% mutate(Abundance_for200_v1 = ifelse(Abundance_original == 1 | Abundance_original == 5, Abundance_original, Abundance_original - 1))
+# join together
+JAM_200_early <- full_join(JAM_50_early, JAM_200_early_v1)
+JAM_200_early <- JAM_200_early %>% mutate(Abundance_for200 = ifelse(is.na(Abundance_for200_v1), Abundance_original, Abundance_for200_v1))
+# delete duplicates, keep highest abundance dupe
+length(unique(JAM_200_early$Subtype)) # 132 unique
+JAM_200_early <- JAM_200_early %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_for200, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# clean up columns
+JAM_50_early <- select(JAM_50_early, -Abundance_for200_v1)
+JAM_50_early <- JAM_50_early %>% rename(Abundance_for50 = Abundance_original)
+JAM_200_early <- select(JAM_200_early, -Abundance_for200_v1, -Abundance_original)
+
+# KB early survey
+KB_50_early <- survey %>% filter(Site == 'KB' & Range == '50m' & Season == 'early/mid')
+KB_200_early_v1 <- survey %>% filter(Site == 'KB' & Range == '200m' & Season == 'early/mid')
+# delete duplicates within the 50 and 200m 
+KB_50_early <- KB_50_early %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+KB_200_early_v1 <- KB_200_early_v1 %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# what are missing in the 200 from 50?
+anti_join(KB_50_early, KB_200_early_v1, by = c('Subtype', 'Family'))
+KB_50_early <- KB_50_early %>% mutate(Abundance_for200_v1 = ifelse(Abundance_original == 1 | Abundance_original == 5, Abundance_original, Abundance_original - 1))
+# join together
+KB_200_early <- full_join(KB_50_early, KB_200_early_v1)
+KB_200_early <- KB_200_early %>% mutate(Abundance_for200 = ifelse(is.na(Abundance_for200_v1), Abundance_original, Abundance_for200_v1))
+# delete duplicates, keep highest abundance dupe
+length(unique(KB_200_early$Subtype)) # 61 unique
+KB_200_early <- KB_200_early %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_for200, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# clean up columns
+KB_50_early <- select(KB_50_early, -Abundance_for200_v1)
+KB_50_early <- KB_50_early %>% rename(Abundance_for50 = Abundance_original)
+KB_200_early <- select(KB_200_early, -Abundance_for200_v1, -Abundance_original)
+
+# JAM late survey
+JAM_50_late <- survey %>% filter(Site == 'JAM' & Range == '50m' & Season == 'late')
+JAM_200_late_v1 <- survey %>% filter(Site == 'JAM' & Range == '200m' & Season == 'late')
+# delete duplicates within the 50 and 200m 
+JAM_50_late <- JAM_50_late %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+JAM_200_late_v1 <- JAM_200_late_v1 %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# what are missing in the 200 from 50?
+anti_join(JAM_50_late, JAM_200_late_v1, by = c('Subtype', 'Family'))
+# minus one level for each plant in the 50m df because it's being considered in the context of 200 instead of 50. E.g., honeysuckle is uncommon for 50m but rare for 200m. Exccept keep rare and extremly abundanct as is
+# I went through the more abundant plants (buttercup, capselle, etc) and decided to keep as 5
+JAM_50_late <- JAM_50_late %>% mutate(Abundance_for200_v1 = ifelse(Abundance_original == 1 | Abundance_original == 5, Abundance_original, Abundance_original - 1))
+# join together
+JAM_200_late <- full_join(JAM_50_late, JAM_200_late_v1)
+JAM_200_late <- JAM_200_late %>% mutate(Abundance_for200 = ifelse(is.na(Abundance_for200_v1), Abundance_original, Abundance_for200_v1))
+# delete duplicates, keep highest abundance dupe
+length(unique(JAM_200_late$Subtype)) # 120 unique
+JAM_200_late <- JAM_200_late %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_for200, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# clean up columns
+JAM_50_late <- select(JAM_50_late, -Abundance_for200_v1)
+JAM_50_late <- JAM_50_late %>% rename(Abundance_for50 = Abundance_original)
+JAM_200_late <- select(JAM_200_late, -Abundance_for200_v1, -Abundance_original)
+
+# KB late survey
+KB_50_late <- survey %>% filter(Site == 'KB' & Range == '50m' & Season == 'late')
+KB_200_late_v1 <- survey %>% filter(Site == 'KB' & Range == '200m' & Season == 'late')
+# delete duplicates within the 50 and 200m 
+KB_50_late <- KB_50_late %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+KB_200_late_v1 <- KB_200_late_v1 %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_original, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# what are missing in the 200 from 50?
+anti_join(KB_50_late, KB_200_late_v1, by = c('Subtype', 'Family'))
+# minus one level for each plant in the 50m df because it's being considered in the context of 200 instead of 50. E.g., honeysuckle is uncommon for 50m but rare for 200m. Exccept keep rare and extremly abundanct as is
+# I went through the more abundant plants (buttercup, capselle, etc) and decided to keep as 5
+KB_50_late <- KB_50_late %>% mutate(Abundance_for200_v1 = ifelse(Abundance_original == 1 | Abundance_original == 5, Abundance_original, Abundance_original - 1))
+# join together
+KB_200_late <- full_join(KB_50_late, KB_200_late_v1)
+KB_200_late <- KB_200_late %>% mutate(Abundance_for200 = ifelse(is.na(Abundance_for200_v1), Abundance_original, Abundance_for200_v1))
+# delete duplicates, keep highest abundance dupe
+length(unique(KB_200_late$Subtype)) # 32 unique
+KB_200_late <- KB_200_late %>%
+  group_by(Subtype) %>%
+  slice_max(Abundance_for200, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+# clean up columns
+KB_50_late <- select(KB_50_late, -Abundance_for200_v1)
+KB_50_late <- KB_50_late %>% rename(Abundance_for50 = Abundance_original)
+KB_200_late <- select(KB_200_late, -Abundance_for200_v1, -Abundance_original)
+# remove word abundance, now only use numbers 
+JAM_50_early <- select(JAM_50_early, -Abundance)
+KB_50_early <- select(KB_50_early, -Abundance)
+JAM_50_late <- select(JAM_50_late, -Abundance)
+KB_50_late <- select(KB_50_late, -Abundance)
+JAM_200_early <- select(JAM_200_early, -Abundance)
+KB_200_early <- select(KB_200_early, -Abundance)
+JAM_200_late <- select(JAM_200_late, -Abundance)
+KB_200_late <- select(KB_200_late, -Abundance)
+
+```
+
+```{r Bee_pollen_samples}
 
 ## Organizing pollen count dataframe
 
@@ -152,9 +287,19 @@ pollen_0$Bee_ID <- as.character(pollen_0$Bee_ID)
 pollen_0$Bee_ID <- paste(pollen_0$Site, pollen_0$Bee_ID, sep = '_') 
 table(pollen_0$Bee_ID) # looks good
 
-# combine family and subtype
-pollen_0$Subtype <- paste(pollen_0$Family, pollen_0$Subtype, sep = '_') 
-
+# look through subtypes, make the most narrow taxa that I want
+# if it says 'type x' or 'not specified' then replace with family name 
+pollen_0 <- pollen_0 %>%
+  mutate(Subtype_v1 = ifelse(
+    grepl("Type", Subtype, ignore.case = TRUE), Family, Subtype))
+pollen_0 <- pollen_0 %>%
+  mutate(Subtype_v2 = ifelse(
+    grepl("Not specified", Subtype_v1, ignore.case = TRUE), Family, Subtype_v1))
+# replace old subtypes column
+pollen_0 <- pollen_0 %>% select(-Subtype, -Subtype_v1)
+pollen_0 <- pollen_0 %>% rename(Subtype = Subtype_v2)
+pollen_0 <- pollen_0 %>%
+  relocate(Subtype, .before = 5)
 
 # count number of samples for each bee
 pollen <- pollen_0 %>%
@@ -167,41 +312,350 @@ pollen %>%
   group_by(Bee_ID, Date_pollen) %>%
   summarize(sum(Count))
 
-# remove pollen types with less than 1% (1-2 pollen grains) because it could be from landing on the flower for nectar or contamination from making pollen slides, likely not a bee collecting pollen
+# remove pollen types with less than 1% (1-3 pollen grains) because it could be from landing on the flower for nectar or contamination from making pollen slides, likely not a bee collecting pollen
 pollen <- pollen %>% filter(Count > 3)
 
-
-## Saving wrangled data
-
-write.csv(pollen, 'Data/Pollen_and_Surveys/Pollen_data_cleaned.csv')
-
-
-
-## Descriptive
-
-# how many individuals collected 1 pollen type vs more than one?
-# number of pollen types
+# sclae the remaining pollen to 300
 pollen <- pollen %>%
-  group_by(Bee_ID, Date_pollen) %>%
-  mutate(Num_of_families = n_distinct(Family)) %>%
-  ungroup()
+  group_by(Slide_code) %>%
+  mutate(
+    total = sum(Count),
+    Count_scaled = round(Count / total * 300)
+  ) %>%
+  ungroup() %>%
+  select(-total)
 
+# replace 'grass' with family name
+pollen <- pollen %>% mutate(Subtype = sub("^Grass$", "Gramineae", Subtype))
+
+# number of collected pollen types
 pollen <- pollen %>%
   group_by(Bee_ID, Date_pollen) %>%
   mutate(Num_of_subtypes = n_distinct(Subtype)) %>%
   ungroup()
+
+
+## Descriptive
 
 # make summary for descriptive stats
 pollen_summary <- pollen %>%
   distinct(Bee_ID, Date_pollen, .keep_all = TRUE)
 # keep relevant columns
 pollen_summary <- pollen_summary %>%
-  select(Site, Bee_ID, Date_pollen, Num_of_samples, Num_of_families, Num_of_subtypes)
+  select(Site, Bee_ID, Date_pollen, Num_of_samples, Num_of_subtypes)
 
-table(pollen_summary$Num_of_families)
+# average samples per bee
+per_bee <- pollen_summary %>% 
+  group_by(Bee_ID) %>% 
+  slice_max(Num_of_samples, n = 1, with_ties = FALSE) %>%
+  ungroup()
+mean(per_bee$Num_of_samples)
+# 1.69
+
+table(pollen_summary$Num_of_subtypes)
 # 40 / 83 samples have a single pollen type
-# if we say 95% of pollen from one family, it's 49 / 83 (counted manually)
-table(pollen_summary$Num_of_subtypes) # number of subtypes barely changes anything
+
+# how many unknowns?
+table(pollen$Family)
+# 7 unknowns across 15 samples
+
+```
+
+```{r Abundance_and_Samples}
+
+
+## Match abundance with pollen sample data
+
+# assign mid season floral survey to 2024 pollen samples and late season survey to 2025 pollen samples
+# if subtype in bee pollen data has an abundance rank in floral data, use that
+
+# check length of df
+length(unique(pollen$Slide_code)) # 83 samples
+length(pollen$Slide_code) # 148 rows
+
+
+### 200 m survey ###
+
+# first, divide up pollen samples for KB and JAM, early and late surveys, for subtype-level observations
+   # do all 200m to start
+pollen_JAM_200_early_sub_v1 <- pollen %>% filter(Site == "JAM" & format(Date_pollen, "%Y") == "2024") # 53 samples
+pollen_JAM_200_late_sub_v1 <- pollen %>% filter(Site == "JAM" & format(Date_pollen, "%Y") == "2025") # 20 
+pollen_KB_200_early_sub_v1 <- pollen %>% filter(Site == "KB" & format(Date_pollen, "%Y") == "2024") # 9
+pollen_KB_200_late_sub_v1 <- pollen %>% filter(Site == "KB" & format(Date_pollen, "%Y") == "2025") # 1
+
+# then left_join with floral survey data to join for subtypes if we know them from the pollen samples
+pollen_JAM_200_early_sub <- left_join(pollen_JAM_200_early_sub_v1, JAM_200_early, by = c("Site", "Subtype", 'Family')) 
+pollen_JAM_200_late_sub <- left_join(pollen_JAM_200_late_sub_v1, JAM_200_late, by = c("Site", "Subtype", 'Family')) 
+pollen_KB_200_early_sub <- left_join(pollen_KB_200_early_sub_v1, KB_200_early, by = c("Site", "Subtype", 'Family')) 
+pollen_KB_200_late_sub <- left_join(pollen_KB_200_late_sub_v1, KB_200_late, by = c("Site", "Subtype", 'Family')) 
+
+# if subtype is just family (so doesn't have a specific abundance assinged from previous step) then compound all the family abundance then adding it 
+# seperate NAs from already assinged subtype abundance 
+pollen_JAM_200_early_sub_NA <- pollen_JAM_200_early_sub %>% filter(is.na(Abundance_for200))
+pollen_JAM_200_early_sub_noNA <- pollen_JAM_200_early_sub %>% filter(!is.na(Abundance_for200))
+# check which families are in the bee samples so I will compound those floral counts
+# Amaryllidaceae, Asteraceae, Brassicaceae, Caryophyllaceae, Gramineae, Iridaceae, Myrtaceae, Rosaceae
+
+pollen_JAM_200_late_sub_NA <- pollen_JAM_200_late_sub %>% filter(is.na(Abundance_for200))
+pollen_JAM_200_late_sub_noNA <- pollen_JAM_200_late_sub %>% filter(!is.na(Abundance_for200))
+# Asteraceae, Brassicaceae
+
+pollen_KB_200_early_sub_NA <- pollen_KB_200_early_sub %>% filter(is.na(Abundance_for200))
+pollen_KB_200_early_sub_noNA <- pollen_KB_200_early_sub %>% filter(!is.na(Abundance_for200))
+# Ericaceae (Rhododendron)
+
+pollen_KB_200_late_sub_NA <- pollen_KB_200_late_sub %>% filter(is.na(Abundance_for200))
+# only unknown
+
+## Compilling floral survey data 
+
+# when there are multiple occurances of different subtypes of the same family
+# e.g., multiple occurances of roses being available and uncommon, which get compilled to abundant 
+
+# look at survey data then reasign abundance if needed
+# JAM 200 early
+JAM_200_early_to_merge <- JAM_200_early %>% filter(Family == 'Amaryllidaceae' | Family == 'Asteraceae' | Family == 'Brassicaceae' | Family == 'Caryophyllaceae' | Family == 'Gramineae' | Family == 'Iridaceae' | Family == 'Myrtaceae' | Family == 'Rosaceae')
+ # Amaryllidaceae - keep rare 
+ # Asteraceae - keep extremely abundant 
+ # Brassicaceae - keep extremely abundant
+ # Caryophyllaceae - keep extremely abundant
+ # Gramineae - grass, doesn't exist in survey but was extremely abundant
+ # Iridaceae - keep uncommon
+ # Myrtaceae - keep uncommon
+ # Rosaceae - make abundant 
+# organize by abundance, remove duplicates, add rosaceae and grass abundance
+JAM_200_early_to_merge <- JAM_200_early_to_merge %>%
+  group_by(Family) %>%
+  slice_max(Abundance_for200, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# for abundance 
+JAM_200_early_to_merge <- JAM_200_early_to_merge %>%
+  mutate(Abundance_for200 = ifelse(
+    Family == "Rosaceae",
+    sub(3, 4, Abundance_for200),
+    Abundance_for200
+  ))
+# add grass
+JAM_200_early_to_merge <- JAM_200_early_to_merge %>% add_row(Site = 'JAM', Subsite = 'JAM', Range = '50m', Season = 'early/mid', Date = 'Nov 27 2024', Common_name = 'grass', Subtype = 'Gramineae', Family = 'Gramineae', Abundance_for200 = '5')
+
+# JAM 200 late
+JAM_200_late_to_merge <- JAM_200_late %>% filter(Family == 'Asteraceae' | Family == 'Brassicaceae')
+ # Asteraceae - keep extremely abundant 
+ # Brassicaceae - change to abundant
+JAM_200_late_to_merge <- JAM_200_late_to_merge %>%
+  group_by(Family) %>%
+  slice_max(Abundance_for200, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# for number abundance 
+JAM_200_late_to_merge <- JAM_200_late_to_merge %>%
+  mutate(Abundance_for200 = ifelse(
+    Family == "Brassicaceae",
+    sub(2, 4, Abundance_for200),
+    Abundance_for200
+  ))
+
+# KB 200 early
+KB_200_early %>% filter(Family == 'Ericaceae')
+# doesn't exist in this survey
+# add as zero
+
+# KB 200 late
+# only unknown type
+pollen_KB_200_late_fam <- pollen_KB_200_late_sub_NA 
+
+
+# remove common name and subsite, not accurate for compilled family taxa
+JAM_200_early_to_merge <- JAM_200_early_to_merge %>% select(-Common_name, -Subsite, -Subtype, -Range, -Date)
+JAM_200_late_to_merge <- JAM_200_late_to_merge %>% select(-Common_name, -Subsite, -Subtype, -Range, -Date)
+pollen_KB_200_late_fam <- pollen_KB_200_late_fam %>% select(-Common_name, -Subsite, -Range, -Date) # keep subtype
+# do KB early in a min
+
+# make abundance numeric and remove empty columns
+JAM_200_early_to_merge$Abundance_for200 <- as.numeric(JAM_200_early_to_merge$Abundance_for200)
+pollen_JAM_200_early_sub_NA <- pollen_JAM_200_early_sub_NA %>% select(-Subsite, -Range, -Season, -Date, -Common_name, -Abundance_for200)
+JAM_200_late_to_merge$Abundance_for200 <- as.numeric(JAM_200_late_to_merge$Abundance_for200)
+pollen_JAM_200_late_sub_NA <- pollen_JAM_200_late_sub_NA %>% select(-Subsite, -Range, -Season, -Date, -Common_name, -Abundance_for200)
+
+# combine the family-level df with the floral survey data
+# JAM 200
+pollen_JAM_200_early_fam <- left_join(pollen_JAM_200_early_sub_NA, JAM_200_early_to_merge, by = c('Family', 'Site')) 
+pollen_JAM_200_late_fam <- left_join(pollen_JAM_200_late_sub_NA, JAM_200_late_to_merge, by = c('Family', 'Site')) 
+# KB 200
+ # early has one family, the rest unknown
+ # late has one unknown 
+
+# if there are NAs, it means the pollen sample is unknown or not in the survey
+
+# not in survey gets 0
+pollen_KB_200_early_fam <- pollen_KB_200_early_sub_NA %>%
+  mutate(Abundance_for200 = ifelse(Family == "Ericaceae", 0, Abundance_for200))
+# remove unneccessary columns 
+pollen_KB_200_early_fam <- pollen_KB_200_early_fam %>% select(-Common_name, -Range, -Subsite, -Date)
+
+# bind together all family and subtype data seperately 
+pollen_200_fam <- rbind(pollen_JAM_200_early_fam, pollen_JAM_200_late_fam, pollen_KB_200_early_fam, pollen_KB_200_late_fam)
+pollen_200_sub <- rbind(pollen_JAM_200_early_sub_noNA, pollen_JAM_200_late_sub_noNA, pollen_KB_200_early_sub_noNA)
+
+# remove the same columns for sub as we did for family 
+pollen_200_sub <- pollen_200_sub %>% select(-Subsite, -Date, -Range, -Common_name)
+
+# bind all together
+pollen_200_abundance <- rbind(pollen_200_sub, pollen_200_fam)
+
+# check length of df
+length(unique(pollen_200_abundance$Slide_code)) # 83 samples
+length(pollen_200_abundance$Slide_code) # 148 rows
+
+
+### 50 m survey ###
+
+# use divided pollen samples from 200m for subtype-level observations
+# then left_join with floral survey data
+pollen_JAM_50_early_sub <- left_join(pollen_JAM_200_early_sub_v1, JAM_50_early, by = c("Site", "Subtype", 'Family')) 
+pollen_JAM_50_late_sub <- left_join(pollen_JAM_200_late_sub_v1, JAM_50_late, by = c("Site", "Subtype", 'Family')) 
+pollen_KB_50_early_sub <- left_join(pollen_KB_200_early_sub_v1, KB_50_early, by = c("Site", "Subtype", 'Family')) 
+pollen_KB_50_late_sub <- left_join(pollen_KB_200_late_sub_v1, KB_50_late, by = c("Site", "Subtype", 'Family')) 
+
+# if subtype is just family (so doesn't have a specific abundance assinged from the previous step) then compound all the family abundance then adding it 
+# seperate NAs from already assinged subtype abundance 
+pollen_JAM_50_early_sub_NA <- pollen_JAM_50_early_sub %>% filter(is.na(Abundance_for50))
+pollen_JAM_50_early_sub_noNA <- pollen_JAM_50_early_sub %>% filter(!is.na(Abundance_for50))
+# check which families are in the bee samples so I will compound those floral counts
+# Amaryllidaceae, Asteraceae, Brassicaceae, Caryophyllaceae, Gramineae, Iridaceae, Myrtaceae, Rosaceae, Pyracantha (subtype)
+
+pollen_JAM_50_late_sub_NA <- pollen_JAM_50_late_sub %>% filter(is.na(Abundance_for50))
+pollen_JAM_50_late_sub_noNA <- pollen_JAM_50_late_sub %>% filter(!is.na(Abundance_for50))
+# Asteraceae, Brassicaceae 
+
+pollen_KB_50_early_sub_NA <- pollen_KB_50_early_sub %>% filter(is.na(Abundance_for50))
+pollen_KB_50_early_sub_noNA <- pollen_KB_50_early_sub %>% filter(!is.na(Abundance_for50))
+# Ericaceae (Rhododendron)
+
+pollen_KB_50_late_sub_NA <- pollen_KB_50_late_sub %>% filter(is.na(Abundance_for50))
+# only unknown
+ 
+# look at survey data then reasign abundance if needed to compile family types
+# JAM 50 early
+JAM_50_early_to_merge <- JAM_50_early %>% filter(Family == 'Amaryllidaceae' | Family == 'Asteraceae' | Family == 'Brassicaceae' | Family == 'Caryophyllaceae' | Family == 'Gramineae' | Family == 'Iridaceae' | Family == 'Myrtaceae' | Family == 'Rosaceae' | Subtype == 'Pyracantha')
+ # Amaryllidaceae - absent (only 200m range)
+ # Asteraceae - keep extremely abundant 
+ # Brassicaceae - keep extremely abundant
+ # Caryophyllaceae - keep abundant
+ # Gramineae - grass, doesn't exist in survey but was extremely abundant
+ # Iridaceae - absent (only 200m range)
+ # Myrtaceae - keep uncommon
+ # Rosaceae - make available 
+ # Pyracantha - absent (only 200m range)
+# organize by abundance, remove duplicates, add rosaceae and grass abundance
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>%
+  group_by(Family) %>%
+  slice_max(Abundance_for50, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# for abundance changes
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>%
+  mutate(Abundance_for50 = ifelse(
+    Family == "Rosaceae",
+    sub(2, 3, Abundance_for50),
+    Abundance_for50
+  ))
+# add types absent within 50m
+JAM_50_early_to_merge$Abundance_for50 <- as.numeric(JAM_50_early_to_merge$Abundance_for50)
+ # Amaryllidaceae
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>% add_row(Site = 'JAM', Subsite = 'JAM', Range = '50m', Season = 'early/mid', Date = 'Nov 27 2024', Common_name = NA, Subtype = 'Amaryllidaceae', Family = 'Amaryllidaceae', Abundance_for50 = 0)
+ # Iridaceae
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>% add_row(Site = 'JAM', Subsite = 'JAM', Range = '50m', Season = 'early/mid', Date = 'Nov 27 2024', Common_name = NA, Subtype = 'Iridaceae', Family = 'Iridaceae', Abundance_for50 = 0)
+ # Pyracantha
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>% add_row(Site = 'JAM', Subsite = 'JAM', Range = '50m', Season = 'early/mid', Date = 'Nov 27 2024', Common_name = NA, Subtype = 'Pyracantha', Family = 'Rosaceae', Abundance_for50 = 0)
+# add grass
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>% add_row(Site = 'JAM', Subsite = 'JAM', Range = '50m', Season = 'early/mid', Date = 'Nov 27 2024', Common_name = 'grass', Subtype = 'Gramineae', Family = 'Gramineae', Abundance_for50 = 5)
+
+# JAM 50 late
+JAM_50_late_to_merge <- JAM_50_late %>% filter(Family == 'Asteraceae' | Family == 'Brassicaceae')
+ # Asteraceae - change to extremely abundant 
+ # Brassicaceae - keep rare
+# keep highest dupe
+JAM_50_late_to_merge <- JAM_50_late_to_merge %>%
+  group_by(Family) %>%
+  slice_max(Abundance_for50, n = 1, with_ties = FALSE) %>%
+  ungroup()
+# for number abundance 
+JAM_50_late_to_merge <- JAM_50_late_to_merge %>%
+  mutate(Abundance_for50 = ifelse(
+    Family == "Asteraceae",
+    sub(4, 5, Abundance_for50),
+    Abundance_for50
+  ))
+
+# KB 50 early
+KB_50_early %>% filter(Family == 'Ericaceae')
+# doesn't exist in this survey
+# add as zero
+
+# KB 50 late
+# only unknown type
+pollen_KB_50_late_fam <- pollen_KB_50_late_sub_NA 
+
+
+# remove common name and subsite, not accurate for compilled family taxa
+JAM_50_early_to_merge <- JAM_50_early_to_merge %>% select(-Common_name, -Subsite, -Subtype, -Range, -Date)
+JAM_50_late_to_merge <- JAM_50_late_to_merge %>% select(-Common_name, -Subsite, -Subtype, -Range, -Date)
+pollen_KB_50_late_fam <- pollen_KB_50_late_fam %>% select(-Common_name, -Subsite, -Range, -Date) # keep subtype
+# do KB early in a min
+
+# make abundance numeric and remove empty columns
+JAM_50_early_to_merge$Abundance_for50 <- as.numeric(JAM_50_early_to_merge$Abundance_for50)
+pollen_JAM_50_early_sub_NA <- pollen_JAM_50_early_sub_NA %>% select(-Subsite, -Range, -Season, -Date, -Common_name, -Abundance_for50)
+JAM_50_late_to_merge$Abundance_for50 <- as.numeric(JAM_50_late_to_merge$Abundance_for50)
+pollen_JAM_50_late_sub_NA <- pollen_JAM_50_late_sub_NA %>% select(-Subsite, -Range, -Season, -Date, -Common_name, -Abundance_for50)
+
+
+# combine the family-level df with the floral survey data
+# JAM 50
+pollen_JAM_50_early_fam <- left_join(pollen_JAM_50_early_sub_NA, JAM_50_early_to_merge, by = c('Family', 'Site')) 
+pollen_JAM_50_late_fam <- left_join(pollen_JAM_50_late_sub_NA, JAM_50_late_to_merge, by = c('Family', 'Site')) 
+# KB 50
+ # early has one family, the rest unknown
+ # late has one unknown 
+
+# if there are NAs, it means the pollen sample is unknown or not in the survey
+
+# not in survey gets 0
+pollen_KB_50_early_fam <- pollen_KB_50_early_sub_NA %>%
+  mutate(Abundance_for50 = ifelse(Family == "Ericaceae", 0, Abundance_for50))
+# remove unneccessary columns 
+pollen_KB_50_early_fam <- pollen_KB_50_early_fam %>% select(-Common_name, -Range, -Subsite, -Date)
+
+# bind together all family and subtype data seperately 
+pollen_50_fam <- rbind(pollen_JAM_50_early_fam, pollen_JAM_50_late_fam, pollen_KB_50_early_fam, pollen_KB_50_late_fam)
+pollen_50_sub <- rbind(pollen_JAM_50_early_sub_noNA, pollen_JAM_50_late_sub_noNA, pollen_KB_50_early_sub_noNA)
+
+# remove the same columns for sub as we did for family 
+pollen_50_sub <- pollen_50_sub %>% select(-Subsite, -Date, -Range, -Common_name)
+
+# bind all together
+pollen_50_abundance <- rbind(pollen_50_sub, pollen_50_fam)
+
+# check length of df
+length(unique(pollen_50_abundance$Slide_code)) # 83 samples
+length(pollen_50_abundance$Slide_code) # 150 rows, show be 148
+# there are two duplicates because of the Rosaceae and Pyracantha changes. Easiest and cleanest way is to manually remove these 
+# duplicates: JAM_OOO J-154 Rosaceae and JAM_OBO-P J-187 Pyracantha
+# had to remove one at a time for some reason for it to work
+pollen_50_abundance <- pollen_50_abundance %>% filter(Slide_code != 'J-187' | Abundance_for50 != 3 )
+pollen_50_abundance <- pollen_50_abundance %>% filter(Slide_code != 'J-154' | Abundance_for50 != 0)
+
+length(unique(pollen_50_abundance$Slide_code)) # 83 samples
+length(pollen_50_abundance$Slide_code) # 148 rows, Pyracantha is absent and other Rosaceae is available, perfect!
+
+
+## Bind 50m and 200m into one df
+
+pollen_samples <- left_join(pollen_50_abundance, pollen_200_abundance)
+
+
+## Saving wrangled data
+
+write.csv(pollen_samples, 'Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
 
 
 ```
@@ -209,8 +663,9 @@ table(pollen_summary$Num_of_subtypes) # number of subtypes barely changes anythi
 ```{r Behaviour_data}
 
 # beehav has all individuals per nest
-# beehav_nest_full has repeated lines within a nest, unique date-nest combo
-# beehav_nest_sum has one line per nest with the highest number of females
+# beehav_full has repeated lines within a nest, unique date-nest combo
+# beehav_sum has one line per nest with the highest number of females
+
 
 beehav <- read_csv('Data/Behaviour/Video_logs_summary.csv')
 
@@ -219,60 +674,113 @@ beehav$Date_beehav <- with(beehav, paste(Year, paste0(Month, sep = '-', Day), se
 beehav$Date_beehav <- as.Date(beehav$Date_beehav)
 beehav <- beehav %>% select(-Day, -Month, -Year)
 
+# Num_females_same_day: this column has the conservative estimate for the number of females partaking in nest care (pollen collection, vigilance with known ID, and digging) WITHIN ONE DAY
+# vigilance with no ID is not counted because emerging females often rest at nest entrance without doing any other nest care
 
-# Number of females
- # liberal : pollen collection, digging, vigilance, and leaving
- # moderate : pollen collection, digging and vigilance
- # conservative : pollen collection, digging and IF we know their ID, vigilance or leaving nest or entering without pollen
+# are we missing social behaviour? doing this in R code so that my steps for more nuanced social diagnoses are reproducable 
 
-# ONLY use conservative estimate, moderate is maybe more accurate but we cannot ID females performing vigilance, so two unknown IDs could be either 2 females or 1 female. So use conservative estimate
-beehav <- beehav %>% select(-Num_females_mod, -Num_females_lib)
+## Compare with Paint IDs
+
+IDs_JAM <- read_csv('Data/Paint_ID/Paint_IDs_JAM.csv')
+IDs_KB <- read_csv('Data/Paint_ID/Paint_IDs_KB.csv')
+
+# which nests have more than one female painted in them?
+IDs_JAM %>%
+  group_by(Nest) %>% 
+  filter(n() > 1)  
+IDs_KB %>%
+  group_by(Nest) %>% 
+  filter(n() > 1) 
+
+# compare nests with more than one female painted with beehav data
+
+beehav_potentially_social <- beehav %>% filter(Nest == 'J11' | Nest == 'J18' | Nest == 'J26' | Nest == 'J51' | Nest == 'J56' | Nest == 'J75' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92' | Nest == 'K23')
+
+# Date	  Bee_ID	Nest Notes
+# 29-Oct	WYG	    11	 nest not filmed until Dec, only 1 unknown vigilance on Dec 10. 
+# 12-Nov	PWB	    11	    -> keep solitary, no solid evidence of sociality
+# 18-Nov	W-WWG	  18	 never filmed after being marked, and was weeks after previous 2 bees
+# 25-Nov	G-OGP	  18	 OGP and WWG last seen Nov 25, No ID collects pollen Jan 16
+# 16-Jan	P-PPG	  18	    -> P-PPG could have continued nest or reused nest, but wouldn't be for the first batch of brood
+# 06-Nov	OBO-P	  26	 No ID filmed after OBO-P 6 weeks later then another 2 weeks later
+# 06-Jan	P-POB	  26	    -> P-POB could have continued nest or reused nest, but wouldn't be for the first batch of brood
+# 06-Jan	O-WOW	  51	 only Y-PPY filmed
+# 06-Jan	Y-PPY	  51	    -> keep solitary, no solid evidence of sociality 
+# 07-Nov	PGP	    56	 no behaviour for J56 ever filmed
+# 07-Nov	BWW	    56	    -> keep solitary, no solid evidence of sociality
+# 18-Nov	GWG	    75	 both collected pollen, but not on same day. GWG painted in Nov them collected pollen Dec 5. BBP painted and collcted pollen Dec 2
+# 02-Dec	BBO	    75	    -> likely social
+# 02-Dec	WPP	    87	 WPP behaviour never filmed
+# 02-Dec	PBG	    87	    -> behaviour for only 2 workers ever filmed, keep as is
+# 06-Jan	Y-YPP	  87	
+# 06-Jan	W-PWO	  91	 a third bee (no ID) collected pollen on Jan 22 and these two stayed active till Feb
+# 16-Jan	P-OOP-O	91	    -> deffinitely a third bee
+# 16-Jan	O-OBB	  92	 three bees collected pollen on Jan 28th. B-BPP mightve been the No ID
+# 16-Jan	Y-WYW	  92	    -> deffinitely a third bee
+# 28-Jan	B-BPP	  92	
+# 03-Dec	BBB-W	  23	activity a month apart
+# 17-Jan	O-OOG	  23	    -> keep solitary, no solid evidence of sociality
+
+
+## What do we change:
+ # J92 had 3 active workers on Jan 28
+ # J91 had another active worker on Jan 22
+ # J75 was social in early Dec
+ # J11, J51, J56 could have been social because bees were painted within 2 weeks from same nest (or same day for J51 and J56), but behaviour not recorded 
+ # J26, J18, J87 and K23 keep as is, because the additional worker was painted at least 1.5 months later
+
+#### check: do i care about tmeporal stuff, e.g., how many times do I have J75 in the beehav data (before or after its social?) AND in the pollen data!
+
+
 
 
 ## Nest-level data unique date-nest combo
 
 # make summary with only 1 row per nest with the highest number of females per date
-beehav_nest_full <- beehav %>%
+beehav_full <- beehav %>%
   group_by(Nest, Date_beehav) %>%
-  slice_max(Num_females_con, n = 1, with_ties = FALSE) %>%
+  slice_max(Num_females_same_day, n = 1, with_ties = FALSE) %>%
   ungroup()
 
 # keep only columns that make sense for summary df
-beehav_nest_full <- beehav_nest_full %>% 
-  select(Nest, Site, Num_females_con, Date_beehav)
+beehav_full <- beehav_full %>% 
+  select(Nest, Site, Num_females_same_day, Date_beehav)
+
+
+
 
 # mark nests as solitary or social for each date (may end up with nests that go back and forth between solitary and social)
-beehav_nest_full <- beehav_nest_full %>% 
-  mutate(Social_status_con = ifelse(Num_females_con > 1, "social", "solitary"))
+beehav_full <- beehav_full %>% 
+  mutate(Social_status = ifelse(Num_females_same_day > 1, "social", "solitary"))
 
 
 ## Create one line per nest 
-# with the maximum Num_females_con
+# with the maximum Num_females_same_day
 
-beehav_nest_sum <- beehav_nest_full %>%
+beehav_sum <- beehav_full %>%
   group_by(Nest) %>%
-  arrange(desc(Num_females_con)) %>%
+  arrange(desc(Num_females_same_day)) %>%
   slice_head(n = 1) %>%
   ungroup()
 
 
 # make df to make sure each nest is counted once
 # count number solitary nests for each site
-JAM_sol_con <- beehav_nest_sum %>%
-  filter(Site == "JAM", Num_females_con == 1) %>%
+JAM_sol <- beehav_sum %>%
+  filter(Site == "JAM", Num_females_same_day == 1) %>%
   distinct(Nest) %>%
   as.data.frame() # 24 if zero females is not included 
-KB_sol_con <- beehav_nest_sum %>%
-  filter(Site == "KB", Num_females_con == 1) %>%
+KB_sol <- beehav_sum %>%
+  filter(Site == "KB", Num_females_same_day == 1) %>%
   distinct(Nest) %>%
   as.data.frame() # 12 if zero females is not included 
 # count number social nests for each site
-JAM_soc_con <- beehav_nest_sum %>%
-  filter(Site == "JAM", Num_females_con > 1) %>%
+JAM_soc <- beehav_sum %>%
+  filter(Site == "JAM", Num_females_same_day > 1) %>%
   distinct(Nest) %>%
   as.data.frame() # 5
-KB_soc_con <- beehav_nest_sum %>%
-  filter(Site == "KB", Num_females_con > 1) %>%
+KB_soc <- beehav_sum %>%
+  filter(Site == "KB", Num_females_same_day > 1) %>%
   distinct(Nest) %>%
   as.data.frame() # 0
 
@@ -280,16 +788,23 @@ KB_soc_con <- beehav_nest_sum %>%
 ## Saving 
 
 # nest-level data summary
-write.csv(beehav_nest_sum, 'Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
+write.csv(beehav_sum, 'Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
 # nest-level data all social statuses
-write.csv(beehav_nest_full, 'Data/Behaviour/Behaviour_nest_full_cleaned.csv')
+write.csv(beehav_full, 'Data/Behaviour/Behaviour_nest_full_cleaned.csv')
 
 
 ## Descriptive
 
-length(unique(beehav_nest_sum$Nest)) # 51 nests observed 
-table(beehav_nest_sum$Social_status_con) # 5 social, 46 solitary
+length(unique(beehav_sum$Nest)) # 51 nests observed 
+table(beehav_sum$Social_status) # 5 social, 46 solitary
 
+# how many marked bees did we observe?
+# first remove unknowns
+beehav_IDs <- beehav %>% filter(!grepl('Male', Bee_ID))
+beehav_IDs <- beehav_IDs %>% filter(!grepl('No ID', Bee_ID))
+beehav_IDs <- beehav_IDs %>% filter(!grepl('Unknown', Bee_ID))
+length(unique(beehav_IDs$Bee_ID))
+# 39
 
 ```
 
@@ -372,8 +887,8 @@ pollen_beehav <- pollen_beehav %>%
 ## Manually see which dates are closest for the nests that are social (tried and failed to code this)
 
 # look at the nests that have been social for both pollen and behaviour
-beehav_nest_full %>% filter(Social_status_con == 'social')
-social_nest_sum <- beehav_nest_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
+beehav_full %>% filter(Social_status == 'social')
+social_nest_sum <- beehav_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
 social_pollen_sum <- pollen_beehav %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
 
 # nest -- pollen slide: pollen sample date --- closest social status date - social status
@@ -398,29 +913,29 @@ pollen_beehav <- pollen_beehav %>% mutate(Social_status_at_time = ifelse(Slide_c
 
 # make a column to say if it ever becomes social, it stays social
 
-### first add the nest ID to my written table above, then organise table by date then nest ID, then manually change it in second column Social_status_ever
+### Now organized by date within each nest, only two nests revert to solitary 
 
-# Nest	Pollen Slide	Sample Date	Closest Social Date	Social Status
-# J100	J-182	2025-01-15	2025-01-16	solitary
-# J100	J-256	2025-02-04	2025-02-04	social
-# J18	J-291	2024-11-19	2024-11-19	social
-# J18	J-233	2024-11-25	2024-11-25	social
-# J87	J-219	2025-01-06	2025-01-06	solitary
-# J87	J-271	2025-01-07	2025-01-07	social
-# J87	J-113	2025-01-07	2025-01-07	social
-# J87	J-197	2025-01-15	2025-01-15	solitary
-# J91	J-193	2025-01-16	2025-01-16	social
-# J91	J-137	2025-01-16	2025-01-16	social
-# J91	J-250	2025-01-22	2025-01-22	social
-# J91	J-249	2025-02-03	2025-02-03	solitary
-# J92	J-226	2025-01-28	2025-01-28	social
-# J92	J-199	2025-02-03	2025-02-03	social
-# J92	J-133	2025-02-03	2025-02-03	social
+# Social_status_ever
+
+# nest -- pollen slide: pollen sample date --- closest social status date - social status
+ # J100 --	J-182:	2025-01-15 ---  2025-01-16 -	solitary
+ # J100 --	J-256:	2025-02-04 ---  2025-02-04 -	social
+ # J18 --	  J-291:	2024-11-19 ---	2024-11-19 -	social
+ # J18 --	  J-233:	2024-11-25 ---	2024-11-25 -	social
+ # J87 --	  J-219:	2025-01-06 ---	2025-01-06 -	solitary
+ # J87 --  	J-271:	2025-01-07 ---	2025-01-07 -	social
+ # J87 --  	J-113:	2025-01-07 ---	2025-01-07 -	social
+ # J87 --  	J-197:	2025-01-15 ---	2025-01-15 -	solitary <----
+ # J91 --	  J-193:	2025-01-16 ---	2025-01-16 -	social
+ # J91 --	  J-137:	2025-01-16 ---	2025-01-16 -	social
+ # J91 --	  J-250:	2025-01-22 ---	2025-01-22 -	social
+ # J91 --	  J-249:	2025-02-03 ---	2025-02-03 -	solitary <----
+ # J92 --	  J-226:	2025-01-28 ---	2025-01-28 -	social
+ # J92 --	  J-199:	2025-02-03 ---	2025-02-03 -	social
+ # J92 --	  J-133:	2025-02-03 ---	2025-02-03 -	social
 
 
-
-
-
+pollen_beehav <- pollen_beehav %>% mutate(Social_status_ever = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133' | Slide_code == 'J-197' | Slide_code == 'J-249', 'social', 'solitary'))
 
 
 
@@ -428,7 +943,6 @@ pollen_beehav <- pollen_beehav %>% mutate(Social_status_at_time = ifelse(Slide_c
 length(unique(pollen_beehav$Slide_code)) # 45
 length(unique(pollen_beehav$Nest)) # 22
 
-### then label nest as social or solitary for when a pollen sample was collected 
 
 
 ## Save wrangled data
@@ -441,7 +955,7 @@ write.csv(pollen_beehav, 'Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
 ```{r Phylogeny}
 
-library(phytools)
+# library(phytools)
 
 
 # trying to make a lasioglossum tree to see the closest relatives of l sordidum to look up their sociality
