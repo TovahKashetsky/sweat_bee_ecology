@@ -133,17 +133,16 @@
 "132","JAM","JAM_PiBP","J-170","Unknown 6","Unknown 6",300,"light yellow",2024-11-07,3,300,1,NA,NA,NA
 "133","JAM","JAM_GBG","J-201","Unknown 6","Unknown 6",288,"medium yellow",2024-11-19,2,288,2,NA,NA,NA
 "134","JAM","JAM_OOO","J-154","Rosaceae","Rosaceae",300,"medium yellow",2024-11-25,3,300,1,"early/mid",3,4
-"135","JAM","JAM_OGG","J-206","Asteraceae","Asteraceae",291,"medium yellow",2025-01-07,4,296,1,"late",5,5
-"136","JAM","JAM_OGG","J-206","Asteraceae","Asteraceae",4,"medium yellow",2025-01-07,4,4,1,"late",5,5
-"137","JAM","JAM_W-OWW","J-256","Asteraceae","Asteraceae",57,"dark yellow",2025-02-04,2,57,5,"late",5,5
-"138","JAM","JAM_W-OWW","J-256","Brassicaceae","Brassicaceae",8,"dark yellow",2025-02-04,2,8,5,"late",1,4
-"139","JAM","JAM_O-OBB","J-133","Asteraceae","Asteraceae",72,"medium yellow",2025-02-03,2,72,2,"late",5,5
-"140","JAM","JAM_W-OWW","J-256","Unknown 7","Unknown 7",84,"dark yellow",2025-02-04,2,84,5,NA,NA,NA
-"141","KB","KB_WWG","K-167","Unknown 1","Unknown 1",300,"light yellow",2024-12-03,1,300,1,NA,NA,NA
-"142","KB","KB_GGB","K-273","Ericaceae","Rhododendron",8,"light yellow",2024-12-03,1,8,2,NA,0,0
-"143","KB","KB_PBB","K-266","Unknown 2","Unknown 2",206,"light yellow",2024-12-04,1,206,2,NA,NA,NA
-"144","KB","KB_PWP","K-122","Unknown 1","Unknown 1",300,"light yellow",2024-12-04,1,300,1,NA,NA,NA
-"145","KB","KB_OOO","K-261","Unknown 1","Unknown 1",230,"light yellow",2024-12-03,1,230,2,NA,NA,NA
-"146","KB","KB_PPW","K-153","Unknown 2","Unknown 2",299,"light yellow",2024-12-03,1,300,1,NA,NA,NA
-"147","KB","KB_GGW","K-146","Unknown 3","Unknown 3",230,"light yellow",2024-12-18,1,230,2,NA,NA,NA
-"148","KB","KB_OOB","K-140","Unknown 3","Unknown 3",300,"light yellow",2025-01-17,1,300,1,NA,NA,NA
+"135","JAM","JAM_OGG","J-206","Asteraceae","Asteraceae",295,"medium yellow",2025-01-07,4,300,1,"late",5,5
+"136","JAM","JAM_W-OWW","J-256","Asteraceae","Asteraceae",57,"dark yellow",2025-02-04,2,57,5,"late",5,5
+"137","JAM","JAM_W-OWW","J-256","Brassicaceae","Brassicaceae",8,"dark yellow",2025-02-04,2,8,5,"late",1,4
+"138","JAM","JAM_O-OBB","J-133","Asteraceae","Asteraceae",72,"medium yellow",2025-02-03,2,72,2,"late",5,5
+"139","JAM","JAM_W-OWW","J-256","Unknown 7","Unknown 7",84,"dark yellow",2025-02-04,2,84,5,NA,NA,NA
+"140","KB","KB_WWG","K-167","Unknown 1","Unknown 1",300,"light yellow",2024-12-03,1,300,1,NA,NA,NA
+"141","KB","KB_GGB","K-273","Ericaceae","Rhododendron",8,"light yellow",2024-12-03,1,8,2,NA,0,0
+"142","KB","KB_PBB","K-266","Unknown 2","Unknown 2",206,"light yellow",2024-12-04,1,206,2,NA,NA,NA
+"143","KB","KB_PWP","K-122","Unknown 1","Unknown 1",300,"light yellow",2024-12-04,1,300,1,NA,NA,NA
+"144","KB","KB_OOO","K-261","Unknown 1","Unknown 1",230,"light yellow",2024-12-03,1,230,2,NA,NA,NA
+"145","KB","KB_PPW","K-153","Unknown 2","Unknown 2",299,"light yellow",2024-12-03,1,300,1,NA,NA,NA
+"146","KB","KB_GGW","K-146","Unknown 3","Unknown 3",230,"light yellow",2024-12-18,1,230,2,NA,NA,NA
+"147","KB","KB_OOB","K-140","Unknown 3","Unknown 3",300,"light yellow",2025-01-17,1,300,1,NA,NA,NA

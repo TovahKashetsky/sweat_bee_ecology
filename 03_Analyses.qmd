@@ -7,6 +7,7 @@ editor: visual
 ```{r Load}
 
 library(tidyverse)
+library(vegan) # for NMDS
 
 # polen data
 pollen_samples <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
@@ -18,13 +19,11 @@ beehav_full <- read_csv('Data/Behaviour/Behaviour_nest_full_cleaned.csv')
 pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
 
-
-
 ```
 
 ```{r Sociality}
 
-table(beehav_sum$Num_females_con)
+table(beehav_sum$Num_females_same_day)
 # ignore: 10 nests had 0 observed females partaking in nest care
 # 36 had 1 female at a given time partaking in nest care
 # 3 nests had 2 females
@@ -67,18 +66,92 @@ social_nests <- beehav_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 
 
 ```{r Pollen_Collection}
 
-## Flower constancy
+## Flower Constancy
 
 # how many samples are above 95% of one pollen type
 pollen_samples %>% filter(Count_scaled >= 285)
 # 46 out of 83 samples 
 
 
-## Individuals 
+## How many samples and individuals 
 
 # how many
 length(unique(pollen_samples$Bee_ID))
 # 49 individuals, 83 samples, ranges 1-4 samples per bee
+
+
+## NMDS for pollen composition variation among individuals 
+
+# pivot wider
+pollen_samples_wide <- pollen_samples %>% select(Bee_ID, Slide_code, Subtype, Count_scaled)
+pollen_samples_wide <- pivot_wider(pollen_samples_wide, names_from = 'Subtype', values_from = 'Count_scaled', id_cols = c(Bee_ID, Slide_code))
+
+# replace NA with 0
+pollen_samples_wide[is.na(pollen_samples_wide)] <- 0
+
+# # remove unknown types --- not for the composition question! but yes for abundannce question 
+# pollen_samples_wide <- pollen_samples_wide %>% select(-`Unknown 1`, -`Unknown 2`, -`Unknown 3`, -`Unknown 4`, -`Unknown 5`, -`Unknown 6`, -`Unknown 7`)
+# # now some samples have a sum of 0 (if they had only unknown pollen types) so remove them for numeric columns
+# pollen_samples_wide <- pollen_samples_wide[rowSums(pollen_samples_wide[, sapply(pollen_samples_wide, is.numeric)], na.rm = TRUE) > 0, ]
+
+# extract composition data for one df then descriptors for the other
+# taxa <- pollen_samples_wide %>% select(Ranunculus:Rhododendron)
+desc <- pollen_samples_wide %>% select(Bee_ID, Slide_code)
+
+## create NMDS
+# nmds_pollen_comp <- metaMDS(taxa, distance = 'bray', k = 2)
+
+
+nmds_pollen_comp <- metaMDS(pollen_samples_wide[,3:30], distance = 'bray', k = 2)
+
+
+## Inspect
+print(nmds_pollen_comp) # stress is tiny....
+stressplot(nmds_pollen_comp) # should look like stairs
+
+plot(nmds_pollen_comp)
+scores(nmds_pollen_comp)
+
+
+# Extract NMDS scores for bees 
+  nmds_sample_scores <-
+    # get nmds scores 
+    as.data.frame(scores(nmds_pollen_comp)$sites) 
+  
+  # missing columns I want
+nmds_sample_scores$Slide_code <- pollen_samples_wide$Slide_code
+  
+  
+  
+nmds_sample_scores <- left_join(nmds_sample_scores, desc)
+  
+  
+nmds_sample_scores %>% 
+  group_by(Bee_ID) %>% 
+  filter(n() >= 2) %>% # try bees with more than one sample
+  ungroup() %>% 
+ggplot() + 
+  # add site scores
+  geom_point(aes(x=NMDS1, y=NMDS2, colour = Bee_ID), 
+             size = 2) + 
+  geom_text(aes(x=NMDS1, y=NMDS2, label = Bee_ID)) + # add species scores
+  theme_classic()
+#### the groupped together chunk is flower constant samples, even of different compositions 
+
+
+
+
+
+
+# try NDMS for floral abundance 
+
+
+
+
+
+```
+
+```{r}
 
 
 ```

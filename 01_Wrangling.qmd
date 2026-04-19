@@ -301,6 +301,19 @@ pollen_0 <- pollen_0 %>% rename(Subtype = Subtype_v2)
 pollen_0 <- pollen_0 %>%
   relocate(Subtype, .before = 5)
 
+
+## Slide J-206 has two types of Asteraceae, so combine into one
+# already qualifies for flower constancy so not meaninfully different if we combine or not, but required for NMDS
+
+pollen_0 %>% filter(Slide_code == 'J-206')
+# count is 291 + 4
+# remove dupe
+pollen_0 <- pollen_0 %>% filter(Slide_code != 'J-206' | Count != 4)
+# change count value
+pollen_0 <- pollen_0 %>% 
+  mutate(Count = ifelse(Slide_code == 'J-206' & Family == 'Asteraceae', 295, Count))
+
+
 # count number of samples for each bee
 pollen <- pollen_0 %>%
   group_by(Bee_ID) %>%
@@ -371,7 +384,7 @@ table(pollen$Family)
 
 # check length of df
 length(unique(pollen$Slide_code)) # 83 samples
-length(pollen$Slide_code) # 148 rows
+length(pollen$Slide_code) # 147 rows
 
 
 ### 200 m survey ###
@@ -504,7 +517,7 @@ pollen_200_abundance <- rbind(pollen_200_sub, pollen_200_fam)
 
 # check length of df
 length(unique(pollen_200_abundance$Slide_code)) # 83 samples
-length(pollen_200_abundance$Slide_code) # 148 rows
+length(pollen_200_abundance$Slide_code) # 147 rows
 
 
 ### 50 m survey ###
@@ -637,7 +650,7 @@ pollen_50_abundance <- rbind(pollen_50_sub, pollen_50_fam)
 
 # check length of df
 length(unique(pollen_50_abundance$Slide_code)) # 83 samples
-length(pollen_50_abundance$Slide_code) # 150 rows, show be 148
+length(pollen_50_abundance$Slide_code) # 159 rows, should be 148
 # there are two duplicates because of the Rosaceae and Pyracantha changes. Easiest and cleanest way is to manually remove these 
 # duplicates: JAM_OOO J-154 Rosaceae and JAM_OBO-P J-187 Pyracantha
 # had to remove one at a time for some reason for it to work
@@ -665,7 +678,8 @@ write.csv(pollen_samples, 'Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.c
 # beehav has all individuals per nest
 # beehav_full has repeated lines within a nest, unique date-nest combo
 # beehav_sum has one line per nest with the highest number of females
-
+# Social_status_con: most conservation
+# Social_status_lib: includes two changes for nests J51, J75 and J56 to be social, because two bees painted the same day
 
 beehav <- read_csv('Data/Behaviour/Video_logs_summary.csv')
 
@@ -702,36 +716,35 @@ beehav_potentially_social <- beehav %>% filter(Nest == 'J11' | Nest == 'J18' | N
 # 18-Nov	W-WWG	  18	 never filmed after being marked, and was weeks after previous 2 bees
 # 25-Nov	G-OGP	  18	 OGP and WWG last seen Nov 25, No ID collects pollen Jan 16
 # 16-Jan	P-PPG	  18	    -> P-PPG could have continued nest or reused nest, but wouldn't be for the first batch of brood
-# 06-Nov	OBO-P	  26	 No ID filmed after OBO-P 6 weeks later then another 2 weeks later
+# 06-Nov	OBO-P	  26	 No ID (POB) filmed after OBO-P 6 weeks later then another NO ID 2 weeks later
 # 06-Jan	P-POB	  26	    -> P-POB could have continued nest or reused nest, but wouldn't be for the first batch of brood
 # 06-Jan	O-WOW	  51	 only Y-PPY filmed
-# 06-Jan	Y-PPY	  51	    -> keep solitary, no solid evidence of sociality 
+# 06-Jan	Y-PPY	  51	    -> could be social 
 # 07-Nov	PGP	    56	 no behaviour for J56 ever filmed
-# 07-Nov	BWW	    56	    -> keep solitary, no solid evidence of sociality
+# 07-Nov	BWW	    56	    -> could be social
 # 18-Nov	GWG	    75	 both collected pollen, but not on same day. GWG painted in Nov them collected pollen Dec 5. BBP painted and collcted pollen Dec 2
 # 02-Dec	BBO	    75	    -> likely social
 # 02-Dec	WPP	    87	 WPP behaviour never filmed
 # 02-Dec	PBG	    87	    -> behaviour for only 2 workers ever filmed, keep as is
 # 06-Jan	Y-YPP	  87	
 # 06-Jan	W-PWO	  91	 a third bee (no ID) collected pollen on Jan 22 and these two stayed active till Feb
-# 16-Jan	P-OOP-O	91	    -> deffinitely a third bee
-# 16-Jan	O-OBB	  92	 three bees collected pollen on Jan 28th. B-BPP mightve been the No ID
-# 16-Jan	Y-WYW	  92	    -> deffinitely a third bee
+# 16-Jan	P-OOP-O	91	    -> no change, already had 3 bees active
+# 16-Jan	O-OBB	  92	 three bees collected pollen on Jan 28th
+# 16-Jan	Y-WYW	  92	    -> no change, already had 3 bees active
 # 28-Jan	B-BPP	  92	
 # 03-Dec	BBB-W	  23	activity a month apart
 # 17-Jan	O-OOG	  23	    -> keep solitary, no solid evidence of sociality
 
 
-## What do we change:
- # J92 had 3 active workers on Jan 28
- # J91 had another active worker on Jan 22
- # J75 was social in early Dec
- # J11, J51, J56 could have been social because bees were painted within 2 weeks from same nest (or same day for J51 and J56), but behaviour not recorded 
+## Summary:
+ # J75 was social in early Dec, two diff bees 3 days apart. change to potentially social 
+ # J11 could have been social because bees were painted within 2 weeks 
+ # J51 and J56 each had two bees painted on same day but behaviour not recorded 
  # J26, J18, J87 and K23 keep as is, because the additional worker was painted at least 1.5 months later
+ # J92 and J91 keep as is, already had 3 bees
 
-#### check: do i care about tmeporal stuff, e.g., how many times do I have J75 in the beehav data (before or after its social?) AND in the pollen data!
 
-
+## Only change J51, J56 and J75 to potentially social (after next step)
 
 
 ## Nest-level data unique date-nest combo
@@ -744,14 +757,22 @@ beehav_full <- beehav %>%
 
 # keep only columns that make sense for summary df
 beehav_full <- beehav_full %>% 
-  select(Nest, Site, Num_females_same_day, Date_beehav)
-
-
+  select(Nest, Site, Num_females_same_day, Date_beehav, Nest_sociality_summary)
 
 
 # mark nests as solitary or social for each date (may end up with nests that go back and forth between solitary and social)
 beehav_full <- beehav_full %>% 
-  mutate(Social_status = ifelse(Num_females_same_day > 1, "social", "solitary"))
+  mutate(Social_status_con = ifelse(Num_females_same_day > 1, "social", "solitary"))
+
+
+## Change J51, J75 and J56 to potentially social
+
+# J51 two bees painted on Jan 6
+# J56 two bees painted Nov 7
+# J75 bees filmed on Dec 2 and 5
+beehav_full <- beehav_full %>% mutate(Social_status_lib = ifelse(Nest == 'J51' & Date_beehav == '2025-01-06' | Nest == 'J75' , 'social', Social_status_con))
+# now add in line for J56
+beehav_full <- beehav_full %>% add_row(Nest = 'J56', Site = 'JAM', Num_females_same_day = 0, Date_beehav = NA, Nest_sociality_summary = 'behaviour never recorded, adding social status based on paint markings', Social_status_con = 'solitary', Social_status_lib = 'social')
 
 
 ## Create one line per nest 
@@ -763,26 +784,29 @@ beehav_sum <- beehav_full %>%
   slice_head(n = 1) %>%
   ungroup()
 
+# make sure changes are still there
+# lib should be social, con should be solitary
+beehav_sum %>% filter(Nest == 'J75' | Nest == 'J51' | Nest == 'J56')
 
-# make df to make sure each nest is counted once
-# count number solitary nests for each site
-JAM_sol <- beehav_sum %>%
-  filter(Site == "JAM", Num_females_same_day == 1) %>%
-  distinct(Nest) %>%
-  as.data.frame() # 24 if zero females is not included 
-KB_sol <- beehav_sum %>%
-  filter(Site == "KB", Num_females_same_day == 1) %>%
-  distinct(Nest) %>%
-  as.data.frame() # 12 if zero females is not included 
-# count number social nests for each site
-JAM_soc <- beehav_sum %>%
-  filter(Site == "JAM", Num_females_same_day > 1) %>%
-  distinct(Nest) %>%
-  as.data.frame() # 5
-KB_soc <- beehav_sum %>%
-  filter(Site == "KB", Num_females_same_day > 1) %>%
-  distinct(Nest) %>%
-  as.data.frame() # 0
+
+## Counting not including 0 females
+beehav_sum %>% 
+  filter(Num_females_same_day >= 1) %>% 
+  group_by(Site) %>% 
+  count(Social_status_con)
+# JAM social    5
+# JAM solitary  24 
+# KB solitary   12
+
+## Counting not including 0 females ##### doesn't include J56 which enevr had observations. Add manually 
+beehav_sum %>% 
+  filter(Num_females_same_day >= 1) %>% 
+  group_by(Site) %>% 
+  count(Social_status_lib)
+# JAM social    7 + 1 (J56) = 8
+# JAM solitary  22 
+# KB solitary   12
+
 
 
 ## Saving 
@@ -865,10 +889,9 @@ ID_comparison %>%
   arrange(code) # looking good
 
 
-
 ## Match pollen and behaviour data
 
-# if the bee ID is in the bees_both_both, then extract all their rows from pollen data, and all of the nest IDs from beehav
+# if the bee ID is in the bees_both_data, then extract all their rows from pollen data, and all of the nest IDs from beehav
 
 pollen_beehav <- pollen %>%
   filter(Bee_ID %in% bees_both_data$Bee_ID)
@@ -887,7 +910,12 @@ pollen_beehav <- pollen_beehav %>%
 ## Manually see which dates are closest for the nests that are social (tried and failed to code this)
 
 # look at the nests that have been social for both pollen and behaviour
-beehav_full %>% filter(Social_status == 'social')
+beehav_full %>% filter(Social_status_con == 'social')
+beehav_full %>% filter(Social_status_lib == 'social')
+
+############# did not update below code to include liberal estimate. should I even do this?
+
+
 social_nest_sum <- beehav_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
 social_pollen_sum <- pollen_beehav %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
 
