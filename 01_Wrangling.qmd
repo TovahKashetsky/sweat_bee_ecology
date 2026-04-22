@@ -262,6 +262,20 @@ KB_200_early <- select(KB_200_early, -Abundance)
 JAM_200_late <- select(JAM_200_late, -Abundance)
 KB_200_late <- select(KB_200_late, -Abundance)
 
+# # compile them
+# m_50 <- rbind(JAM_50_early, KB_50_early, JAM_50_late, KB_50_late)
+# m_200 <- rbind(JAM_200_early, KB_200_early, JAM_200_late, KB_200_late)
+# # add column for opposite radius
+# m_50$Abundance_for200 <- NA
+# m_200$Abundance_for50 <- NA
+# 
+# abundance <- rbind(m_50, m_200)
+# 
+# ## Saving 
+# 
+# write.csv(abundance, 'Data/Pollen_and_Surveys/Adundance_data_cleaned.csv')
+
+
 ```
 
 ```{r Bee_pollen_samples}
@@ -346,6 +360,10 @@ pollen <- pollen %>%
   group_by(Bee_ID, Date_pollen) %>%
   mutate(Num_of_subtypes = n_distinct(Subtype)) %>%
   ungroup()
+
+# replace spaces for _
+pollen$Subtype <- str_replace_all(pollen$Subtype, " ", "_")
+pollen$Family <- str_replace_all(pollen$Family, " ", "_")
 
 
 ## Descriptive
@@ -738,8 +756,8 @@ beehav_potentially_social <- beehav %>% filter(Nest == 'J11' | Nest == 'J18' | N
 
 ## Summary:
  # J75 was social in early Dec, two diff bees 3 days apart. change to potentially social 
- # J11 could have been social because bees were painted within 2 weeks 
  # J51 and J56 each had two bees painted on same day but behaviour not recorded 
+ # J11 could have been social because bees were painted within 2 weeks. But not close enough in time, so keep solitary
  # J26, J18, J87 and K23 keep as is, because the additional worker was painted at least 1.5 months later
  # J92 and J91 keep as is, already had 3 bees
 
@@ -798,7 +816,7 @@ beehav_sum %>%
 # JAM solitary  24 
 # KB solitary   12
 
-## Counting not including 0 females ##### doesn't include J56 which enevr had observations. Add manually 
+## Counting not including 0 females ##### doesn't include J56 which never had observations. Add manually 
 beehav_sum %>% 
   filter(Num_females_same_day >= 1) %>% 
   group_by(Site) %>% 
