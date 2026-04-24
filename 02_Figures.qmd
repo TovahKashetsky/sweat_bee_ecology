@@ -10,46 +10,28 @@ library(tidyverse)
 library(ggplot2)
 theme_set(theme_classic())
 
-# polen data
+# pollen data
 pollen_samples <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
+
 # nest-level data summary
 beehav_sum <- read_csv('Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
+
 # nest-level data all social statuses
 beehav_full <- read_csv('Data/Behaviour/Behaviour_nest_full_cleaned.csv')
+
 # pollen_samples and behaviour data
 pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
+# pollen richness for individuals  
+pollen_beehav_ind <- read_csv('Data/Pollen_and_Surveys/Pollen_richness_individuals_cleaned.csv')
 
-## Descriptive
+# pollen richness for nests  
+pollen_beehav_nest <- read_csv('Data/Pollen_and_Surveys/Pollen_richness_nests_cleaned.csv')
 
-# average number of females in social nests
-beehav_sum %>% 
-  filter(Num_females_con > 1) %>% 
-  summarise(mean = mean(Num_females_con))
 
-# flower constancy for individuals 
-pollen_samples %>% 
-  group_by(Slide_code, Bee_ID) %>% 
-  filter(Count >= 285) # 45
 
-length(unique(pollen$Slide_code))
-# 45 of the 83 samples are flower constant
 
-# flower constancy for sociality 
-flower_constancy_social <- pollen_beehav %>% filter(Social_status_at_time == 'social')
-flower_constancy_solitary <- pollen_beehav %>% filter(Social_status_at_time == 'solitary')
 
-flower_constancy_social %>% 
-  group_by(Slide_code, Bee_ID) %>% 
-  filter(Count >= 285) # 6
-length(unique(flower_constancy_social$Slide_code)) # 11
-# 6/11 = 55%
-
-flower_constancy_solitary %>% 
-  group_by(Slide_code, Bee_ID) %>% 
-  filter(Count >= 285) # 19
-length(unique(flower_constancy_solitary$Slide_code)) # 34
-# 19/34 = 56%
 
 ```
 
@@ -67,33 +49,61 @@ pollen_samples <- pollen_samples %>%
   group_by(Bee_ID, Date_pollen) %>%
   arrange(Count)
 
+
 # pollen_samples samples by individual
 pollen_samples %>% 
+  filter(Num_of_samples > 1) %>% 
   arrange(Date_pollen) %>%
   ggplot(aes(x = Date_label, y = Count, fill = Family)) +
-  geom_bar(stat = "identity", position = "fill") +  
+  geom_col(position = "fill", width = 0.8) +
   labs(x = "Date", y = "Proportion of pollen") +
   facet_wrap(~ Bee_ID, scales = "free_x")  + 
-  theme(axis.text.x = element_text(angle = 45, vjust = 0.6))
+  theme(axis.text.x = element_text(angle = 45, vjust = 0.6))  + 
+  theme(
+  strip.background = element_blank(),
+  strip.text = element_text(size = 8))
+
 
 
 # pollen_samples types bees collected, summary 
 # first make df for the sample size for above figures
-n_df <- pollen_samples %>%
+n_df_KB <- pollen_samples %>%
+  filter(Site == 'KB') %>% 
+  group_by(Date_label) %>%
+  summarise(N_bees = length(unique(Slide_code))) 
+
+n_df_JAM <- pollen_samples %>%
+  filter(Site == 'JAM') %>% 
   group_by(Date_label) %>%
   summarise(N_bees = length(unique(Slide_code))) 
 
 pollen_samples %>% 
+  filter(Site == 'KB') %>% 
   ggplot(aes(x = Date_label, y = Count, fill = Family)) +
   geom_bar(stat = "identity", position = "fill") +
   geom_text(
-    data = n_df,
+    data = n_df_KB,
     aes(x = Date_label, y = 1.05, label = (N_bees)),
     inherit.aes = FALSE) +
   coord_cartesian(ylim = c(0, 1.1)) + 
   labs(y = 'Proportion of pollen', x = 'Date') + 
   theme(axis.text.x = element_text(angle = 45,  vjust = 0.6))
   
+pollen_samples %>% 
+  filter(Site == 'JAM') %>% 
+  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  geom_bar(stat = "identity", position = "fill") +
+  geom_text(
+    data = n_df_JAM,
+    aes(x = Date_label, y = 1.05, label = (N_bees)),
+    inherit.aes = FALSE) +
+  coord_cartesian(ylim = c(0, 1.1)) + 
+  labs(y = 'Proportion of pollen', x = 'Date') + 
+  theme(axis.text.x = element_text(angle = 45,  vjust = 0.6))
+
+
+
+
 
 # abundance for 50m
 pollen_samples %>% 
@@ -115,17 +125,17 @@ pollen_samples %>%
 ```{r Behviour_figures}
 
 # label by week
-library(lubridate)
+
 beehav_full <- beehav_full %>%
-  mutate(
-    Week_index = as.integer(difftime(floor_date(Date_beehav, "week"),
+  filter(!is.na(Date_beehav)) %>% 
+  mutate(Week_index = as.numeric(difftime(floor_date(Date_beehav, "week"),
                                      floor_date(min(Date_beehav), "week"),
-                                     units = "weeks")) + 1)
+                                     units = "weeks") + 1))
 
 # remove duplicates within the same week if there are any by arranging "social" first, then removing dupes
 beehav_sum_weekly <- beehav_full %>%
   group_by(Week_index, Nest) %>%
-  arrange(desc(Num_females_con)) %>%
+  arrange(desc(Num_females_same_day)) %>%
   slice_head(n = 1) %>% 
   ungroup()
 
@@ -154,8 +164,8 @@ beehav_sum_weekly %>%
 # max number of females in each nest 
 # Conservative estimate
 beehav_sum %>%
-  filter(Num_females_con != 0) %>% 
-  ggplot(aes(x = Num_females_con, fill = Site)) +
+  filter(Num_females_same_day != 0) %>% 
+  ggplot(aes(x = Num_females_same_day, fill = Site)) +
   geom_bar(position = 'dodge') +
   scale_fill_manual(values = c("#e65f55", "#edc647"))  +
   labs(y = 'Number of nests', x = 'Number of females')
@@ -165,7 +175,7 @@ beehav_sum %>%
 # Number females over time in social nests conservative estimate
 beehav_sum_weekly %>%
   filter(Nest == "J18" | Nest == "J100" | Nest == "J87" | Nest == "J91" | Nest == "J92" | Nest == "K13") %>% 
-  ggplot(aes(x = Week_index, y = Num_females_con, colour = Nest, fill = Nest)) +
+  ggplot(aes(x = Week_index, y = Num_females_same_day, colour = Nest, fill = Nest)) +
   geom_line() +
   geom_point() +
   ylim(0, 4)
@@ -173,7 +183,7 @@ beehav_sum_weekly %>%
 
 # plot total number of nest sociality
 beehav_sum %>%
-  filter(Num_females_con != 0) %>% 
+  filter(Num_females_same_day != 0) %>% 
   ggplot(aes(x = Site, fill = Social_status_con)) +
   geom_bar(position = "stack") +
   scale_fill_manual(values = c("#045b87", "#52c5ff")) +
@@ -186,34 +196,62 @@ beehav_sum %>%
 
 ```{r Pollen_and_Sociality_figures}
 
-# sample size
+# sample size for conservative
 pollen_beehav %>%
-  group_by(Social_status_at_time) %>%
+  group_by(Social_status_at_time_con) %>%
   summarise(n_samples = n_distinct(Slide_code))
 
-# pollen_samples diversity per sociality 
-pollen_beehav %>% 
-  group_by(Slide_code) %>% 
-  ggplot(aes(x = Social_status_at_time, y = Num_of_families, fill = Social_status_at_time )) + 
+
+## Violin plots
+
+# richness per nest, compiled
+pollen_beehav_nest %>% 
+  ggplot(aes(x = Social_status_at_time_con, y = Richness_nest, fill = Social_status_at_time_con )) + 
   geom_violin() + 
   scale_fill_manual(values = c("#045b87", "#52c5ff")) +
-  labs(y = "Number of plant families per pollen_samples sample", x = 'Sociality')
+  labs(y = "Richness per nest", x = 'Sociality') +
+  theme(legend.position = "none")
 
-# social nests
+# richness per invidivual, average
+pollen_beehav_ind %>% 
+  ggplot(aes(x = Social_status_at_time_con, y = Richness_ind_mean, fill = Social_status_at_time_con )) + 
+  geom_violin() + 
+  scale_fill_manual(values = c("#045b87", "#52c5ff")) +
+  labs(y = "Average richness per individual", x = 'Sociality') +
+  theme(legend.position = "none")
+
+
+
+# all samples of social nests
 pollen_beehav %>% 
-  filter(Social_status_at_time == "social") %>% 
-  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  filter(Social_status_at_time_con == "social") %>% 
+  ggplot(aes(x = Date_pollen, y = Count, fill = Family)) +
   geom_bar(stat = "identity", position = "fill") +  
   labs(x = "Date", y = "Proportion of pollen", title = "social nests") +
   facet_wrap(~ Bee_ID, scales = "free_x") 
 
-# solitary nests
+# all samples of solitary nests
 pollen_beehav %>% 
-  filter(Social_status_at_time == "solitary") %>% 
-  ggplot(aes(x = Date_label, y = Count, fill = Family)) +
+  filter(Social_status_at_time_con == "solitary") %>% 
+  ggplot(aes(x = Date_pollen, y = Count, fill = Family)) +
   geom_bar(stat = "identity", position = "fill") +  
   labs(x = "Date", y = "Proportion of pollen", title = "solitary nests") +
   facet_wrap(~ Bee_ID, scales = "free_x")
+
+
+pollen_beehav_ind %>%
+  filter(Social_status_at_time_con == 'solitary') %>% 
+  ggplot(aes(x = Date_pollen, y = Richness_ind, colour = Bee_ID)) +
+  geom_jitter(height = 0, width = 0, alpha = 0.7) + 
+  geom_line() +
+  theme(legend.position = 'none')
+
+pollen_beehav_ind %>%
+  filter(Social_status_at_time_con == 'social') %>% 
+  ggplot(aes(x = Date_pollen, y = Richness_ind, colour = Bee_ID)) +
+  geom_jitter(height = 0, width = 0, alpha = 0.7) + 
+  geom_line() +
+  theme(legend.position = 'none')
 
 
 ```

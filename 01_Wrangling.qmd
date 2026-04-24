@@ -8,7 +8,7 @@ editor: visual
 
 library(tidyverse)
 
-# pollen_samples is pollen samples from bees (pollen) wirth the abundance data (survey)
+# pollen_samples is pollen samples from bees (pollen) with the abundance data (survey)
 
 ```
 
@@ -270,10 +270,7 @@ KB_200_late <- select(KB_200_late, -Abundance)
 # m_200$Abundance_for50 <- NA
 # 
 # abundance <- rbind(m_50, m_200)
-# 
-# ## Saving 
-# 
-# write.csv(abundance, 'Data/Pollen_and_Surveys/Adundance_data_cleaned.csv')
+
 
 
 ```
@@ -366,34 +363,25 @@ pollen$Subtype <- str_replace_all(pollen$Subtype, " ", "_")
 pollen$Family <- str_replace_all(pollen$Family, " ", "_")
 
 
-## Descriptive
+# # make summary for descriptive stats
+# pollen_summary <- pollen %>%
+#   distinct(Bee_ID, Date_pollen, .keep_all = TRUE)
+# # keep relevant columns
+# pollen_summary <- pollen_summary %>%
+#   select(Site, Bee_ID, Date_pollen, Num_of_samples, Num_of_subtypes)
+# 
+# # average samples per bee
+# per_bee <- pollen_summary %>% 
+#   group_by(Bee_ID) %>% 
+#   slice_max(Num_of_samples, n = 1, with_ties = FALSE) %>%
+#   ungroup()
+# mean(per_bee$Num_of_samples)
+# # 1.69
 
-# make summary for descriptive stats
-pollen_summary <- pollen %>%
-  distinct(Bee_ID, Date_pollen, .keep_all = TRUE)
-# keep relevant columns
-pollen_summary <- pollen_summary %>%
-  select(Site, Bee_ID, Date_pollen, Num_of_samples, Num_of_subtypes)
-
-# average samples per bee
-per_bee <- pollen_summary %>% 
-  group_by(Bee_ID) %>% 
-  slice_max(Num_of_samples, n = 1, with_ties = FALSE) %>%
-  ungroup()
-mean(per_bee$Num_of_samples)
-# 1.69
-
-table(pollen_summary$Num_of_subtypes)
-# 40 / 83 samples have a single pollen type
-
-# how many unknowns?
-table(pollen$Family)
-# 7 unknowns across 15 samples
 
 ```
 
 ```{r Abundance_and_Samples}
-
 
 ## Match abundance with pollen sample data
 
@@ -684,11 +672,6 @@ length(pollen_50_abundance$Slide_code) # 148 rows, Pyracantha is absent and othe
 pollen_samples <- left_join(pollen_50_abundance, pollen_200_abundance)
 
 
-## Saving wrangled data
-
-write.csv(pollen_samples, 'Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
-
-
 ```
 
 ```{r Behaviour_data}
@@ -816,37 +799,26 @@ beehav_sum %>%
 # JAM solitary  24 
 # KB solitary   12
 
-## Counting not including 0 females ##### doesn't include J56 which never had observations. Add manually 
+## Counting not including 0 females #
 beehav_sum %>% 
   filter(Num_females_same_day >= 1) %>% 
   group_by(Site) %>% 
   count(Social_status_lib)
-# JAM social    7 + 1 (J56) = 8
+# JAM social    7 + 1 (J56) = 8 # doesn't include J56 which never had observations, so add manually 
 # JAM solitary  22 
 # KB solitary   12
 
 
-
-## Saving 
-
-# nest-level data summary
-write.csv(beehav_sum, 'Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
-# nest-level data all social statuses
-write.csv(beehav_full, 'Data/Behaviour/Behaviour_nest_full_cleaned.csv')
-
-
-## Descriptive
-
 length(unique(beehav_sum$Nest)) # 51 nests observed 
 table(beehav_sum$Social_status) # 5 social, 46 solitary
 
-# how many marked bees did we observe?
-# first remove unknowns
-beehav_IDs <- beehav %>% filter(!grepl('Male', Bee_ID))
-beehav_IDs <- beehav_IDs %>% filter(!grepl('No ID', Bee_ID))
-beehav_IDs <- beehav_IDs %>% filter(!grepl('Unknown', Bee_ID))
-length(unique(beehav_IDs$Bee_ID))
-# 39
+# # how many marked bees did we observe?
+# # first remove unknowns
+# beehav_IDs <- beehav %>% filter(!grepl('Male', Bee_ID))
+# beehav_IDs <- beehav_IDs %>% filter(!grepl('No ID', Bee_ID))
+# beehav_IDs <- beehav_IDs %>% filter(!grepl('Unknown', Bee_ID))
+# length(unique(beehav_IDs$Bee_ID))
+# # 39
 
 ```
 
@@ -931,11 +903,10 @@ pollen_beehav <- pollen_beehav %>%
 beehav_full %>% filter(Social_status_con == 'social')
 beehav_full %>% filter(Social_status_lib == 'social')
 
-############# did not update below code to include liberal estimate. should I even do this?
+social_nest_sum <- beehav_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92' | Nest == 'J51' | Nest == 'J56' | Nest == 'J75')
+social_pollen_sum <- pollen_beehav %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92' | Nest == 'J51' | Nest == 'J56' | Nest == 'J75')
 
-
-social_nest_sum <- beehav_full %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
-social_pollen_sum <- pollen_beehav %>% filter(Nest == 'J100' | Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92')
+# made this table by comparing on these two dfs
 
 # nest -- pollen slide: pollen sample date --- closest social status date - social status
  # J100 --  J-182: 2025-01-15 --- 2025-01-16 - solitary
@@ -953,15 +924,22 @@ social_pollen_sum <- pollen_beehav %>% filter(Nest == 'J100' | Nest == 'J18' | N
  # J92 --   J-226: 2025-01-28 --- 2025-01-28 - social
  # J92 --   J-199: 2025-02-03 --- 2025-02-03 - social
  # J92 --   J-133: 2025-02-03 --- 2025-02-03 - social
- 
+ # J51 --   J-145: 2025-01-15 --- 2025-01-16 - solitary <-- this nest is only social when I 
+ # J51 --   J-208: 2025-01-16 --- 2025-01-16 - solitary     painted two bees on same day
+ # J75 --   J-150: 2024-12-05 --- 2024-12-02 - social <-- 2 bees collecting pollen 2 days apart
+ # J56 -- no pollen samples 
+
+
 # make column with social status
-pollen_beehav <- pollen_beehav %>% mutate(Social_status_at_time = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133', 'social', 'solitary'))
+# all samples above get social if labelled social, otherwise solitary
+# conservative (J75 is solitary)
+pollen_beehav <- pollen_beehav %>% mutate(Social_status_at_time_con = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133', 'social', 'solitary'))
+# liberal (J75 is social)
+pollen_beehav <- pollen_beehav %>% mutate(Social_status_at_time_lib = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133' | Slide_code == 'J-150', 'social', 'solitary'))
 
 # make a column to say if it ever becomes social, it stays social
 
-### Now organized by date within each nest, only two nests revert to solitary 
-
-# Social_status_ever
+## Now organized by date within each nest, only two nests revert to solitary 
 
 # nest -- pollen slide: pollen sample date --- closest social status date - social status
  # J100 --	J-182:	2025-01-15 ---  2025-01-16 -	solitary
@@ -971,18 +949,25 @@ pollen_beehav <- pollen_beehav %>% mutate(Social_status_at_time = ifelse(Slide_c
  # J87 --	  J-219:	2025-01-06 ---	2025-01-06 -	solitary
  # J87 --  	J-271:	2025-01-07 ---	2025-01-07 -	social
  # J87 --  	J-113:	2025-01-07 ---	2025-01-07 -	social
- # J87 --  	J-197:	2025-01-15 ---	2025-01-15 -	solitary <----
+ # J87 --  	J-197:	2025-01-15 ---	2025-01-15 -	solitary <-- change to social
  # J91 --	  J-193:	2025-01-16 ---	2025-01-16 -	social
  # J91 --	  J-137:	2025-01-16 ---	2025-01-16 -	social
  # J91 --	  J-250:	2025-01-22 ---	2025-01-22 -	social
- # J91 --	  J-249:	2025-02-03 ---	2025-02-03 -	solitary <----
+ # J91 --	  J-249:	2025-02-03 ---	2025-02-03 -	solitary <-- change to social
  # J92 --	  J-226:	2025-01-28 ---	2025-01-28 -	social
  # J92 --	  J-199:	2025-02-03 ---	2025-02-03 -	social
  # J92 --	  J-133:	2025-02-03 ---	2025-02-03 -	social
+ # J51 --   J-145:  2025-01-15 --- 2025-01-16 - social <-- change to social *
+ # J51 --   J-208:  2025-01-16 --- 2025-01-16 - social <-- change to social 
+ # J75 --   J-150:  2024-12-05 --- 2024-12-02 - social
+ # J56 -- no pollen samples 
 
+# * two bees painted the same day on Jan 6, so then keep this nest social for Social_status_ever
 
-pollen_beehav <- pollen_beehav %>% mutate(Social_status_ever = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133' | Slide_code == 'J-197' | Slide_code == 'J-249', 'social', 'solitary'))
-
+# conservative (J75 and J51 as solitary)
+pollen_beehav <- pollen_beehav %>% mutate(Social_status_ever_con = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133' | Slide_code == 'J-197' | Slide_code == 'J-249', 'social', 'solitary'))
+# liberal (J75 and J51 as solitary)
+pollen_beehav <- pollen_beehav %>% mutate(Social_status_ever_lib = ifelse(Slide_code == 'J-256' | Slide_code == 'J-291' | Slide_code == 'J-233' | Slide_code == 'J-271' | Slide_code == 'J-113' | Slide_code == 'J-193' | Slide_code == 'J-250' | Slide_code == 'J-137' | Slide_code == 'J-226' | Slide_code == 'J-199' | Slide_code == 'J-133' | Slide_code == 'J-197' | Slide_code == 'J-249' | Slide_code == 'J-150' | Slide_code == 'J-145' | Slide_code == 'J-208', 'social', 'solitary'))
 
 
 # how many pollen samples and nests do we have pollen and behaviour data for?
@@ -991,10 +976,197 @@ length(unique(pollen_beehav$Nest)) # 22
 
 
 
-## Save wrangled data
+
+
+```
+
+```{r Individual_ID}
+
+## Create number for each bee instead of code
+# Site-Nest-ID
+
+paint_IDs_JAM <- read_csv('Data/Paint_ID/Paint_IDs_JAM.csv')
+paint_IDs_KB <- read_csv('Data/Paint_ID/Paint_IDs_KB.csv')
+
+# add site intitial, index, and paste 
+paint_IDs_JAM <- paint_IDs_JAM %>% mutate(J = 'J')
+paint_IDs_JAM <- tibble::rowid_to_column(paint_IDs_JAM, "ID")
+paint_IDs_JAM$Num_ID <- paste(paint_IDs_JAM$J, paint_IDs_JAM$ID, sep = '-') 
+
+# same for other site 
+paint_IDs_KB <- paint_IDs_KB %>% mutate(K = 'K')
+paint_IDs_KB <- tibble::rowid_to_column(paint_IDs_KB, "ID")
+paint_IDs_KB$Num_ID <- paste(paint_IDs_KB$K, paint_IDs_KB$ID, sep = '-') 
+
+# combine ID with site to match with earlier dfs
+paint_IDs_JAM$Bee_ID <- as.character(paint_IDs_JAM$Bee_ID)
+paint_IDs_JAM$Bee_ID <- paste('JAM', paint_IDs_JAM$Bee_ID, sep = '_') 
+paint_IDs_KB$Bee_ID <- as.character(paint_IDs_KB$Bee_ID)
+paint_IDs_KB$Bee_ID <- paste('KB', paint_IDs_KB$Bee_ID, sep = '_') 
+
+# take columns I need
+paint_IDs_JAM <- paint_IDs_JAM %>% select(Bee_ID, Num_ID)
+paint_IDs_KB <- paint_IDs_KB %>% select(Bee_ID, Num_ID)
+
+# bind together
+paint_IDs <- rbind(paint_IDs_JAM, paint_IDs_KB)
+
+
+# bind to dataframes
+
+x <- left_join(pollen_samples, paint_IDs, by = 'Bee_ID')
+
+##### need to fix the ones that dont match 
+# yyy is probably y-wyw
+
+
+
+```
+
+```{r Editing_data_for_results}
+
+
+## Editing data for analyses and figures
+
+
+## Create day of season 
+
+season_start <- as.Date("2024-11-07") # first day of collected pollen
+pollen_samples <- pollen_samples %>%
+  mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
+# move earlier
+pollen_samples <- pollen_samples %>% relocate(Day_of_season, .after = Date_pollen)
+
+
+
+## Create richness (number of plant subtypes)
+# doing this now once we have social/ nest-level data
+
+# richness at the nest level for all samples compiled
+pollen_beehav <- pollen_beehav %>%
+  group_by(Nest) %>%
+  mutate(Richness_nest = n_distinct(Subtype)) %>%
+  ungroup()
+
+# richness per sample
+pollen_beehav <- pollen_beehav %>%
+  group_by(Slide_code) %>%
+  mutate(Richness_ind = n_distinct(Subtype)) %>%
+  ungroup()
+
+# average richness at the individual level for each sample
+pollen_beehav <- pollen_beehav %>%
+  group_by(Bee_ID, Slide_code) %>%
+  mutate(Richness_ind_mean_v1 = n_distinct(Subtype)) %>%
+  ungroup()
+pollen_beehav <- pollen_beehav %>%
+  group_by(Bee_ID) %>%
+  mutate(Richness_ind_mean = mean(Richness_ind_mean_v1)) %>%
+  ungroup()
+
+# keep columns for individuals
+pollen_beehav_ind <- pollen_beehav %>% select(Nest, Bee_ID, Site, Date_pollen, Richness_ind_mean, Richness_ind, Social_status_at_time_con, Social_status_at_time_lib)
+# remove duplicates
+pollen_beehav_ind <- distinct(pollen_beehav_ind)
+
+# keep columns for nests
+pollen_beehav_nest <- pollen_beehav %>% select(Nest, Site, Richness_nest, Social_status_at_time_con, Social_status_at_time_lib)
+# remove duplicates
+pollen_beehav_nest <- distinct(pollen_beehav_nest)
+# manually for nests both social and solitary
+pollen_beehav_nest <- pollen_beehav_nest %>%
+  filter(!(Social_status_at_time_con == "solitary" &
+           Nest %in% c("J100", "J87", "J91")))
+
+
+
+## For diversity and cumulative diversity 
+
+# # pivot wider
+# pollen_samples_wide <- pollen_samples %>% select(Bee_ID, Slide_code, Date_pollen, Subtype, Count_scaled)
+# pollen_samples_wide <- pivot_wider(pollen_samples_wide, names_from = 'Subtype', values_from = 'Count_scaled', id_cols = c(Bee_ID, Slide_code, Date_pollen))
+# 
+# # replace NA with 0
+# pollen_samples_wide[is.na(pollen_samples_wide)] <- 0
+# 
+# # take just the samples and calculate diversity
+# just_pollen <- pollen_samples_wide %>% select(-Slide_code, -Bee_ID, -Date_pollen)
+# diversity <- just_pollen %>% diversity(index = "shannon")
+# # the zeros are flower constant bees
+# 
+# # make df and rename with capital
+# diversity <- as.data.frame(diversity)
+# diversity <- diversity %>% rename(Diversity = diversity)
+# 
+# # add the descriptive info back in
+# diversity$Slide_code <- pollen_samples_wide$Slide_code
+# diversity$Bee_ID <- pollen_samples_wide$Bee_ID
+# to_join <- pollen_samples %>% select(-...1, -Family, -Subtype, -Count, -Count_scaled, -Season, -Abundance_for50, -Abundance_for200)
+# to_join <- distinct(to_join)
+# pollen_diversity <- inner_join(to_join, diversity)
+# 
+# # create day of season, better than date for model
+# season_start <- as.Date("2024-11-07") # first day of collected pollen
+# pollen_diversity <- pollen_diversity %>%
+#   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
+# # move earlier
+# pollen_diversity <- pollen_diversity %>% relocate(Day_of_season, .after = 5)
+# 
+# # Cumulative diversity
+# 
+# # take column names of taxa
+# taxa_cols <- pollen_samples_wide %>%
+#   select(Ranunculus:Unknown_7) %>%
+#   names()
+# 
+# # make day of season
+# pollen_samples_wide <- pollen_samples_wide %>%
+#   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
+# pollen_samples_wide <- pollen_samples_wide %>% relocate(Day_of_season, .after = 2)
+# 
+# 
+# # pull the cumultive counts of pollen and types within each bee
+# pollen_samples_cumu <- pollen_samples_wide %>%
+#   arrange(Day_of_season) %>%   
+#   group_by(Bee_ID) %>%
+#   mutate(across(all_of(taxa_cols), cumsum)) %>%
+#   ungroup() 
+# 
+# # make cumulative diversity 
+# pollen_samples_cumu$Diversity_cumu <- diversity(pollen_samples_cumu[, taxa_cols], index = "shannon")
+
+
+
+# remove first index columns
+
+
+
+
+
+
+```
+
+```{r Saving}
+
+## Saving wrangled data
+
+# pollen data
+write.csv(pollen_samples, 'Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
+
+# nest-level data summary
+write.csv(beehav_sum, 'Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
+
+# nest-level data all social statuses
+write.csv(beehav_full, 'Data/Behaviour/Behaviour_nest_full_cleaned.csv')
+
+# pollen samples and sociality 
 write.csv(pollen_beehav, 'Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
+# pollen richness for individuals  
+write.csv(pollen_beehav_ind, 'Data/Pollen_and_Surveys/Pollen_richness_individuals_cleaned.csv')
 
+# pollen richness for nests  
+write.csv(pollen_beehav_nest, 'Data/Pollen_and_Surveys/Pollen_richness_nests_cleaned.csv')
 
 
 ```
@@ -1003,9 +1175,7 @@ write.csv(pollen_beehav, 'Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
 # library(phytools)
 
-
 # trying to make a lasioglossum tree to see the closest relatives of l sordidum to look up their sociality
-
 
 # load tree 
 # 
