@@ -24,7 +24,7 @@ Date,Bee_ID,Nest,Notes
 06-Nov,BOO,27,
 06-Nov,GBB,30,
 02-Dec,GPP,32,
-06-Nov,GWW (wings glued),33,
+06-Nov,GWW,33,wings glued
 06-Nov,YBY,35,
 06-Nov,OWO,36,
 06-Nov,WOO,38,
@@ -33,7 +33,7 @@ Date,Bee_ID,Nest,Notes
 07-Nov,PPO,43,
 07-Nov,PWW,44,
 07-Nov,WWP,46,
-07-Nov,PBB (wings glued),47,
+07-Nov,PBB,47,wings glued
 07-Nov,GGP,48,
 07-Nov,WPW,49,
 07-Nov,OOO,50,
@@ -41,7 +41,7 @@ Date,Bee_ID,Nest,Notes
 06-Jan,Y-PPY,51,
 07-Nov,OOG,53,
 07-Nov,WWO,54,
-07-Nov,PGG - P,55,"added pink to abdomen Nov 12, green faded"
+07-Nov,PGG-P,55,"added pink to abdomen Nov 12, green faded"
 07-Nov,PGP,56,
 07-Nov,BWW,56,
 07-Nov,PPB,57,
@@ -77,7 +77,7 @@ Date,Bee_ID,Nest,Notes
 28-Jan,Y-BBY,94,
 15-Jan,W-OWW,100,
 25-Oct,WGB,?,
-25-Oct,R - Y on abdomen,?,
+25-Oct,R-Y,?,on abdomen
 29-Oct,GY-,?,
 06-Nov,OOW,28?,
 07-Nov,PiBPi,Exited 52 with pollen,

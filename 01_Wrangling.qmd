@@ -262,15 +262,225 @@ KB_200_early <- select(KB_200_early, -Abundance)
 JAM_200_late <- select(JAM_200_late, -Abundance)
 KB_200_late <- select(KB_200_late, -Abundance)
 
+
+### Abundance for RDA
+
+## make abundance at family-level, compile subtypes within families
+# e.g., two subtypes of Caprifoliaceae at level 2 get compiled to level 3
+
+# JAM 50 early 
+compiled_JAM_50_early <- JAM_50_early %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for50, na.rm = TRUE),
+    Abundance_for50_comp = case_when(
+      n() == 1 ~ Abundance_for50,   # if Family appears once, keep Abundance_for50 value
+      max_abundance == 5 ~ 5,   # if there are duplicates but it's at the max (5), keep at 5  
+      n() == 2 & any(Abundance_for50 == 1) ~ Abundance_for50,  # if there are 2 duplicates and at least one is 1, then keep abundance as is 
+      TRUE ~ max_abundance + 1   # if there are duplicates but not at the max, add 1 to the count
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns that make sense now that they're compiled 
+compiled_JAM_50_early <- compiled_JAM_50_early %>% select(Site, Season, Family, Abundance_for50_comp)
+# remove duplicates based on highest abundance, in case some are still 1
+compiled_JAM_50_early <- compiled_JAM_50_early %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for50_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# JAM 50 late 
+compiled_JAM_50_late <- JAM_50_late %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for50, na.rm = TRUE),
+    Abundance_for50_comp = case_when(
+      n() == 1 ~ Abundance_for50,   # if Family appears once, keep Abundance_for50 value
+      max_abundance == 5 ~ 5,   # if there are duplicates but it's at the max (5), keep at 5
+      n() == 2 & any(Abundance_for50 == 1) ~ Abundance_for50,  # if there are 2 duplicates and at least one is 1, then keep abundance as is 
+      TRUE ~ max_abundance + 1   # if there are duplicates but not at the max, add 1 to the count
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns that make sense now that they're compiled 
+compiled_JAM_50_late <- compiled_JAM_50_late %>% select(Site, Season, Family, Abundance_for50_comp)
+# remove duplicates based on highest abundance
+compiled_JAM_50_late <- compiled_JAM_50_late %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for50_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# KB 50 early
+compiled_KB_50_early <- KB_50_early %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for50, na.rm = TRUE),
+    Abundance_for50_comp = case_when(
+      n() == 1 ~ Abundance_for50, 
+      max_abundance == 5 ~ 5,    
+      n() == 2 & any(Abundance_for50 == 1) ~ Abundance_for50,  
+      TRUE ~ max_abundance + 1  
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns I need
+compiled_KB_50_early <- compiled_KB_50_early %>% select(Site, Season, Family, Abundance_for50_comp)
+# remove duplicates 
+compiled_KB_50_early <- compiled_KB_50_early %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for50_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# KB 50 late
+compiled_KB_50_late <- KB_50_late %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for50, na.rm = TRUE),
+    Abundance_for50_comp = case_when(
+      n() == 1 ~ Abundance_for50, 
+      max_abundance == 5 ~ 5,    
+      n() == 2 & any(Abundance_for50 == 1) ~ Abundance_for50,  
+      TRUE ~ max_abundance + 1  
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns I need
+compiled_KB_50_late <- compiled_KB_50_late %>% select(Site, Season, Family, Abundance_for50_comp)
+# remove duplicates 
+compiled_KB_50_late <- compiled_KB_50_late %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for50_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# JAM 200 early 
+compiled_JAM_200_early <- JAM_200_early %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for200, na.rm = TRUE),
+    Abundance_for200_comp = case_when(
+      n() == 1 ~ Abundance_for200,   
+      max_abundance == 5 ~ 5,   
+      n() == 2 & any(Abundance_for200 == 1) ~ Abundance_for200, 
+      TRUE ~ max_abundance + 1  
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns that make sense now that they're compiled 
+compiled_JAM_200_early <- compiled_JAM_200_early %>% select(Site, Season, Family, Abundance_for200_comp)
+# remove duplicates based on highest abundance, in case some are still 1
+compiled_JAM_200_early <- compiled_JAM_200_early %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for200_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# JAM 200 late 
+compiled_JAM_200_late <- JAM_200_late %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for200, na.rm = TRUE),
+    Abundance_for200_comp = case_when(
+      n() == 1 ~ Abundance_for200,   
+      max_abundance == 5 ~ 5,   
+      n() == 2 & any(Abundance_for200 == 1) ~ Abundance_for200, 
+      TRUE ~ max_abundance + 1  
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns that make sense now that they're compiled 
+compiled_JAM_200_late <- compiled_JAM_200_late %>% select(Site, Season, Family, Abundance_for200_comp)
+# remove duplicates based on highest abundance, in case some are still 1
+compiled_JAM_200_late <- compiled_JAM_200_late %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for200_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# KB 200 early 
+compiled_KB_200_early <- KB_200_early %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for200, na.rm = TRUE),
+    Abundance_for200_comp = case_when(
+      n() == 1 ~ Abundance_for200,   
+      max_abundance == 5 ~ 5,   
+      n() == 2 & any(Abundance_for200 == 1) ~ Abundance_for200, 
+      TRUE ~ max_abundance + 1  
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns that make sense now that they're compiled 
+compiled_KB_200_early <- compiled_KB_200_early %>% select(Site, Season, Family, Abundance_for200_comp)
+# remove duplicates based on highest abundance, in case some are still 1
+compiled_KB_200_early <- compiled_KB_200_early %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for200_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+# KB 200 late 
+compiled_KB_200_late <- KB_200_late %>%
+  group_by(Family) %>%
+  mutate(
+    max_abundance = max(Abundance_for200, na.rm = TRUE),
+    Abundance_for200_comp = case_when(
+      n() == 1 ~ Abundance_for200,   
+      max_abundance == 5 ~ 5,   
+      n() == 2 & any(Abundance_for200 == 1) ~ Abundance_for200, 
+      TRUE ~ max_abundance + 1  
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# take only coumns that make sense now that they're compiled 
+compiled_KB_200_late <- compiled_KB_200_late %>% select(Site, Season, Family, Abundance_for200_comp)
+# remove duplicates based on highest abundance, in case some are still 1
+compiled_KB_200_late <- compiled_KB_200_late %>%  
+  group_by(Family) %>%
+  slice_max(Abundance_for200_comp, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 # # compile them
 # m_50 <- rbind(JAM_50_early, KB_50_early, JAM_50_late, KB_50_late)
 # m_200 <- rbind(JAM_200_early, KB_200_early, JAM_200_late, KB_200_late)
-# # add column for opposite radius
-# m_50$Abundance_for200 <- NA
-# m_200$Abundance_for50 <- NA
 # 
-# abundance <- rbind(m_50, m_200)
-
+# # bind and take columns I need
+# m_50 <- m_50 %>% select(-Subsite, -Common_name, -Date, -Range)
+# m_200 <- m_200 %>% select(-Subsite, -Common_name, -Date, -Range)
 
 
 ```
@@ -396,7 +606,6 @@ length(pollen$Slide_code) # 147 rows
 ### 200 m survey ###
 
 # first, divide up pollen samples for KB and JAM, early and late surveys, for subtype-level observations
-   # do all 200m to start
 pollen_JAM_200_early_sub_v1 <- pollen %>% filter(Site == "JAM" & format(Date_pollen, "%Y") == "2024") # 53 samples
 pollen_JAM_200_late_sub_v1 <- pollen %>% filter(Site == "JAM" & format(Date_pollen, "%Y") == "2025") # 20 
 pollen_KB_200_early_sub_v1 <- pollen %>% filter(Site == "KB" & format(Date_pollen, "%Y") == "2024") # 9
@@ -667,9 +876,36 @@ length(unique(pollen_50_abundance$Slide_code)) # 83 samples
 length(pollen_50_abundance$Slide_code) # 148 rows, Pyracantha is absent and other Rosaceae is available, perfect!
 
 
-## Bind 50m and 200m into one df
+## Bind 50m and 200m into one df for pollen samples
 
 pollen_samples <- left_join(pollen_50_abundance, pollen_200_abundance)
+
+# sample K-273 had rhododendron that was not found within the 200 meter radius, so the season came out as NA
+# say season is early/mid 
+pollen_samples <- pollen_samples %>% mutate(Season = ifelse(Slide_code == 'K-273', 'early/mid', Season))
+
+
+
+## For the RDA abundance
+
+for_rda_50 <- pollen_samples %>% select(Slide_code, Family, Abundance_for50)
+
+# pivot wider
+for_rda_50 <- pivot_wider(for_rda_50, names_from = 'Family', values_from = 'Abundance_for50', id_cols = Slide_code)
+# replace NA with 0
+abundance_wide_50[is.na(abundance_wide_50)] <- 0
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 ```
@@ -1008,17 +1244,40 @@ paint_IDs_KB$Bee_ID <- paste('KB', paint_IDs_KB$Bee_ID, sep = '_')
 paint_IDs_JAM <- paint_IDs_JAM %>% select(Bee_ID, Num_ID)
 paint_IDs_KB <- paint_IDs_KB %>% select(Bee_ID, Num_ID)
 
+## some NAs from markings that don't match (different ways we wrote the code in the marking sheets vs video recordings)
+# JAM_P-PBG = PBG
+# JAM_PiBP = PiBPi
+# JAM_PPG = P-PPG
+# JAM_PrBP-W = PuBPu-W
+# JAM_Y-YYY <- unsure which bee this would be, potentially forgot to write down the colour combo? keep as it's on ID
+# KB_WWG = WGG <-- in my notes I say 'looks like WWG'
+
+# replace the names for JAM
+paint_IDs_JAM <- paint_IDs_JAM %>% 
+  mutate(Bee_ID_v2 = ifelse(Bee_ID == 'JAM_PBG', 'JAM_P-PBG',
+                            ifelse(Bee_ID == 'JAM_PiBPi', 'JAM_PiBP', 
+                                   ifelse(Bee_ID == 'JAM_P-PPG', 'JAM_PPG', 
+                                          ifelse(Bee_ID == 'JAM_PuBPu-W', 'JAM_PrBP-W', Bee_ID )))))
+
+# replace the names for KB
+paint_IDs_KB <- paint_IDs_KB %>% 
+  mutate(Bee_ID_v2 = ifelse(Bee_ID == 'KB_WGG', 'KB_WWG', Bee_ID))
+
+# change the  column names
+paint_IDs_JAM <- paint_IDs_JAM %>% select(-Bee_ID)
+paint_IDs_KB <- paint_IDs_KB %>% select(-Bee_ID)
+
+paint_IDs_JAM <- paint_IDs_JAM %>% rename(Bee_ID = Bee_ID_v2)
+paint_IDs_KB <- paint_IDs_KB %>% rename(Bee_ID = Bee_ID_v2)
+
 # bind together
 paint_IDs <- rbind(paint_IDs_JAM, paint_IDs_KB)
 
-
 # bind to dataframes
+pollen_samples <- left_join(pollen_samples, paint_IDs, by = 'Bee_ID')
 
-x <- left_join(pollen_samples, paint_IDs, by = 'Bee_ID')
-
-##### need to fix the ones that dont match 
-# yyy is probably y-wyw
-
+# mark Y-YYY as J-85
+pollen_samples <- pollen_samples %>% mutate(Num_ID = ifelse(Bee_ID == 'JAM_Y-YYY', 'J-85', Num_ID))
 
 
 ```

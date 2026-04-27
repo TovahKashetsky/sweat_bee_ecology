@@ -7,7 +7,7 @@ JAM,JAM,50m,early/mid,Nov 27 2024,,carmichaelia,Fabaceae,available
 JAM,JAM,50m,early/mid,Nov 27 2024,chickweed,cerastium,Caryophyllaceae,abundant
 JAM,JAM,50m,early/mid,Nov 27 2024,dandelion,cichorieae,Asteraceae,abundant
 JAM,JAM,50m,early/mid,Nov 27 2024,,corokia,Argophyllaceae,uncommon
-JAM,JAM,50m,early/mid,Nov 27 2024,willowherbs,epilobium,Onograceae,rare
+JAM,JAM,50m,early/mid,Nov 27 2024,willowherbs,epilobium,Onagraceae,rare
 JAM,JAM,50m,early/mid,Nov 27 2024,stork bill,erodium,Geraniaceae,uncommon
 JAM,JAM,50m,early/mid,Nov 27 2024,spindle,euonymus,Celastraceae,available
 JAM,JAM,50m,early/mid,Nov 27 2024,strawberry,fragaria,Rosaceae,uncommon
@@ -37,7 +37,7 @@ JAM,JAM yard,200m,early/mid,Nov 27 2024,speedwell,veronica,Plantaginaceae,abunda
 JAM,JAM yard,200m,early/mid,Nov 27 2024,storks bill,erodium,Geraniaceae,uncommon
 JAM,JAM yard,200m,early/mid,Nov 27 2024,strawberry,fragaria,Rosaceae,rare
 JAM,JAM yard,200m,early/mid,Nov 27 2024,tea tree manuka,leptospermum,Myrtaceae,uncommon
-JAM,JAM yard,200m,early/mid,Nov 27 2024,trefoil,trifolium,Leguminosae,abundant
+JAM,JAM yard,200m,early/mid,Nov 27 2024,trefoil,trifolium,Fabaceae,abundant
 JAM,JAM yard,200m,early/mid,Nov 27 2024,willowherbs,epilobium,Onagraceae,uncommon
 JAM,JAM yard,200m,early/mid,Nov 27 2024,,lysimachia,Primulaceae,uncommon
 JAM,JAM yard,200m,early/mid,Nov 27 2024,,carmichaelia,Fabaceae,rare
@@ -51,7 +51,7 @@ JAM,JAM yard,200m,early/mid,Nov 27 2024,honeysuckle,leycesteria,Caprifoliaceae,r
 JAM,JAM yard,200m,early/mid,Nov 27 2024,camomile,anthemis,Asteraceae,rare
 JAM,JAM yard,200m,early/mid,Nov 27 2024,pansy,viola,Violaceae,rare
 JAM,JAM yard,200m,early/mid,Nov 27 2024,lavender,lavendula,Lamiaceae,uncommon
-JAM,JAM yard,200m,early/mid,Nov 27 2024,vetch,vicia,Leguminosae,rare
+JAM,JAM yard,200m,early/mid,Nov 27 2024,vetch,vicia,Fabaceae,rare
 JAM,JAM yard,200m,early/mid,Nov 27 2024,onions,allium,Amaryllidaceae,rare
 JAM,JAM yard,200m,early/mid,Nov 27 2024,lemons,citrus,Rutaceae,rare
 JAM,JAM yard,200m,early/mid,Nov 27 2024,feijoa,feijoa,Myrtaceae,rare
@@ -84,7 +84,7 @@ JAM,87 tirohanga,200m,early/mid,Dec 2 2024,sow thistles,sonchus,Asteraceae,rare
 JAM,87 tirohanga,200m,early/mid,Dec 2 2024,tall dandelion,cichorieae,Asteraceae,rare
 JAM,87 tirohanga,200m,early/mid,Dec 2 2024,roses,rosa,Rosaceae,uncommon
 JAM,87 tirohanga,200m,early/mid,Dec 2 2024,poppy,papaver,Papaveraceae,rare
-JAM,87 tirohanga,200m,early/mid,Dec 2 2024,White dead flower bush*,,Asteroideae,rare
+JAM,87 tirohanga,200m,early/mid,Dec 2 2024,White dead flower bush*,Asteroideae,Asteraceae,rare
 JAM,87 tirohanga,200m,early/mid,Dec 2 2024,germanders,teucrium,Lamiaceae,uncommon
 JAM,87 tirohanga,200m,early/mid,Dec 2 2024,redclaws,escallonia,Escalloniaceae,uncommon
 JAM,87 tirohanga,200m,early/mid,Dec 2 2024,gromwell,glendora,Boraginaceae,rare
@@ -113,7 +113,7 @@ JAM,67 tirohanga,200m,early/mid,Dec 5 2024,lily,lilium,liliaceae,rare
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,coral bells,heuctera,saxifragaceae,rare
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,lily of the nile,agapanthus,Amaryllidaceae,rare
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,hydrangea,hydrangeas (fruiting),Hydrangeaceae,rare
-JAM,67 tirohanga,200m,early/mid,Dec 5 2024,iris,iris,idrisaceae,rare
+JAM,67 tirohanga,200m,early/mid,Dec 5 2024,iris,iris,Iridaceae,rare
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,Clover,trilfolium,fabaceae,extremely abundant
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,Buttercup,ranunculus,ranunculaceae,extremely abundant
 JAM,67 tirohanga,200m,early/mid,Dec 5 2024,radish,raphanus,Brassicaceae,rare
@@ -170,7 +170,7 @@ JAM,Allen and Liz,200m,early/mid,Dec 12 2024,buttercup,ranunculus,ranunculaceae,
 JAM,Allen and Liz,200m,early/mid,Dec 12 2024,clover,trifolium,fabaceae,abundant
 JAM,Allen and Liz,200m,early/mid,Dec 12 2024,elderberry,sambucus,Adoxaceae,rare
 JAM,Allen and Liz,200m,early/mid,Dec 12 2024,smooth hawksbeard,crepis,Asteraceae,uncommon
-JAM,Allen and Liz,200m,early/mid,Dec 12 2024,peruvian lilies,alstromeria,Alstromeriaceae,uncommon
+JAM,Allen and Liz,200m,early/mid,Dec 12 2024,peruvian lilies,alstromeria,Alstroemeriaceae,uncommon
 JAM,Allen and Liz,200m,early/mid,Dec 12 2024,eggleaf spurfe,euphorbia,Euphorbiaceae,rare
 JAM,Ruth,200m,early/mid,Dec 17 2024,roses,rosa,Rosaceae,available
 JAM,Ruth,200m,early/mid,Dec 17 2024,columbine,aquilegia,Ranunculaceae,uncommon
@@ -237,12 +237,11 @@ KB,Western property (janices),200m,early/mid,Dec 11 2024,Lupin,Lupine,Fabaceae,r
 KB,Western property (janices),200m,early/mid,Dec 11 2024,Dandelion,cichorieae,Asteraceae,abundant
 KB,Western property (janices),200m,early/mid,Dec 11 2024,Forget-me-not,Myosotis,Boraginaceae,uncommon
 KB,Western property (janices),200m,early/mid,Dec 11 2024,gorse,ulex,Fabaceae,abundant
-KB,Western property (janices),200m,early/mid,Dec 11 2024,(fruiting bush),,,available
-KB,Western property (janices),200m,early/mid,Dec 11 2024,,Brassica,Brassicaceae (Brassicodeae),rare
+KB,Western property (janices),200m,early/mid,Dec 11 2024,,Brassicodeae,Brassicaceae,rare
 KB,Western property (janices),200m,early/mid,Dec 11 2024,horehound,Marrubium,Lamiaceae,uncommon
 KB,Western property (janices),200m,early/mid,Dec 11 2024,Blue Field Madder,Sherardia,Rubiaceae,rare
 KB,Western property (janices),200m,early/mid,Dec 11 2024,Nasturtium,Tropaeolum,Tropaeolaceae,available
-KB,Janice's,200m,early/mid,Dec 11 2024,plantain grass,Plantago,"	Plantaginaceae",extremely abundant
+KB,Janice's,200m,early/mid,Dec 11 2024,plantain grass,Plantago,Plantaginaceae,extremely abundant
 KB,North neighbour,200m,early/mid,Dec 18 2024,Clover,trifolium,Fabaceae,extremely abundant
 KB,North neighbour,200m,early/mid,Dec 18 2024,cabbage trees,cordyline,Asparagaceae,available
 KB,North neighbour,200m,early/mid,Dec 18 2024,centauries,centaurium,Gentianaceae,rare
@@ -266,7 +265,7 @@ KB,Janice's list,200m,early/mid,NA,mahoe porcupine shrub,Melicytus,Violaceae,not
 KB,Janice's list,200m,early/mid,NA,fleshy nemesia,Nemesia,Scrophulariaceae,not seen
 KB,Janice's list,200m,early/mid,NA,NZ jasmine,Parsonsia,Apocynaceae,not seen
 KB,Janice's list,200m,early/mid,NA,kaikomako,Pennantia,Icacinaceae,not seen
-KB,Janice's list,200m,early/mid,NA,NZ purple flax,Phormium,Asphodeliaceae,not seen
+KB,Janice's list,200m,early/mid,NA,NZ purple flax,Phormium,Asphodelaceae,not seen
 KB,Janice's list,200m,early/mid,NA,,Pittosporum,Pittosporaceae,not seen
 KB,Janice's list,200m,early/mid,NA,supplejack,Ripogonum,Smilacaceae,not seen
 KB,Janice's list,200m,early/mid,NA,white mountain viola,Viola,Violaceae,not seen
@@ -280,7 +279,7 @@ JAM,JAM,50m,late,Jan 21 2025,,Lysimachia,Primulaceae,uncommon
 JAM,JAM,50m,late,Jan 21 2025,Dandelion,cichorieae,Asteraceae,abundant
 JAM,JAM,50m,late,Jan 21 2025,daisy,bellis,Asteraceae,abundant
 JAM,JAM,50m,late,Jan 21 2025,clover,trifolium,Fabaceae,abundant
-JAM,JAM,50m,late,Jan 21 2025,willow herb,epilobium,Onograceae,available
+JAM,JAM,50m,late,Jan 21 2025,willow herb,epilobium,Onagraceae,available
 JAM,JAM,50m,late,Jan 21 2025,trefoil,trifolium,Fabaceae,extremely abundant
 JAM,JAM,50m,late,Jan 21 2025,,ozothamnus,Asteraceae,uncommon
 JAM,JAM,50m,late,Jan 21 2025,buttercup,ranunculus,Ranunculaceae,uncommon
@@ -363,7 +362,7 @@ JAM,87 Tirohanga,200m,late,Jan 24 2026,yellow glandweed,bellardia,Orobanchaceae,
 JAM,87 Tirohanga,200m,late,Jan 24 2026,greater bird's-foot-trefoil,lotus,Fabaceae,rare
 JAM,89 Tirohanga,200m,late,Jan 24 2026,yarrow,archillea,Asteraceae,uncommon
 JAM,89 Tirohanga,200m,late,Jan 24 2026,pokers,kniphofia,Asphodelaceae,rare
-JAM,85 Tirohanga,200m,late,Jan 24 2026,iris,iris,idrisaceae,rare
+JAM,85 Tirohanga,200m,late,Jan 24 2026,iris,iris,Iridaceae,rare
 JAM,85 Tirohanga,200m,late,Jan 24 2026,chrysanthemums,chrysanthemum,Asteraceae,rare
 JAM,85 Tirohanga,200m,late,Jan 24 2026,redclaws,escallonia,Escalloniaceae,rare
 JAM,85 Tirohanga,200m,late,Jan 24 2026,carnations,dianthus,Caryophyllaceae,rare
@@ -413,7 +412,7 @@ JAM,67 Tirohanga,200m,late,Jan 24 2026,,lophomyrtus,Myrtaceae,uncommon
 JAM,67 Tirohanga,200m,late,Jan 24 2026,lavender,lavendula,Lamiaceae,available
 JAM,67 Tirohanga,200m,late,Jan 24 2026,trefoil,trifolium,Fabaceae,extremely abundant
 JAM,77 Tirohanga,200m,late,Jan 24 2026,storks bill,erodium,Geraniaceae,available
-JAM,77 Tirohanga,200m,late,Jan 24 2026,iris,iris,idrisaceae,uncommon
+JAM,77 Tirohanga,200m,late,Jan 24 2026,iris,iris,Iridaceae,uncommon
 JAM,61 Tirohanga,200m,late,Jan 27 2025,oxeye daisy,leucanthemum,Asteraceae,uncommon
 JAM,61 Tirohanga,200m,late,Jan 27 2025,marigold,tagetes,Asteraceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,japanese anenome,Eriocapitella,Asteraceae,uncommon
@@ -423,7 +422,7 @@ JAM,61 Tirohanga,200m,late,Jan 27 2025,fenell,foeniculum,Apiaceae,uncommon
 JAM,61 Tirohanga,200m,late,Jan 27 2025,God's throne,echeveria,Crassulaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,True lily,lilium,Liliaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,Blue-eyed grasses,sisyrinchium,Iridaceae,rare
-JAM,61 Tirohanga,200m,late,Jan 27 2025,spurges,euphorbia,Euphorbioceae,rare
+JAM,61 Tirohanga,200m,late,Jan 27 2025,spurges,euphorbia,Euphorbiaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,spiderwort,tradescantia,Commelinaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,comfrey,symphytum,Boraginaceae,rare
 JAM,61 Tirohanga,200m,late,Jan 27 2025,,salvia,Lamiaceae,rare

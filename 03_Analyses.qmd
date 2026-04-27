@@ -16,12 +16,16 @@ library(DHARMa)
 
 # pollen data
 pollen_samples <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_data_cleaned.csv')
+
 # nest-level data summary
 beehav_sum <- read_csv('Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
+
 # nest-level data all social statuses
 beehav_full <- read_csv('Data/Behaviour/Behaviour_nest_full_cleaned.csv')
+
 # pollen_samples and behaviour data
 pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
+
 
 # arrange by date 
 pollen_samples <- pollen_samples %>% arrange(Date_pollen)
@@ -135,8 +139,8 @@ pollen_samples_wide_xs <- pollen_samples_wide_xs %>%
   group_by(Bee_ID) %>%
   filter(n() > 1)
 
-length(unique(pollen_samples_wide_xs$Bee_ID)) # 15
-length(unique(pollen_samples_wide_xs$Slide_code)) # 35
+length(unique(pollen_samples_wide_xs$Bee_ID)) # 15 / 49
+length(unique(pollen_samples_wide_xs$Slide_code)) # 35 / 83
 
 
 ## Create NMDS
@@ -249,81 +253,102 @@ pollen_samples %>%
 ### 2iv. Floral abundance
 
 
-# remove NAs
-pollen_samples_noNA <- pollen_samples %>% filter(!is.na(Abundance_for50))
+# remove NAs from the unknown pollen types no abundance data for unknowns)
+pollen_samples_known <- pollen_samples %>% filter(!is.na(Abundance_for50))
 
 # plot 50m
-pollen_samples_noNA %>% 
+pollen_samples_known %>% 
   ggplot(aes(Abundance_for50, Count_scaled, colour = Subtype)) +
   geom_jitter(alpha = 0.6, height = 0.2, width = 0)
 
 # plot 200m
-pollen_samples_noNA %>% 
+pollen_samples_known %>% 
   ggplot(aes(Abundance_for200, Count_scaled, colour = Subtype)) +
   geom_jitter(alpha = 0.6, height = 0.2, width = 0)
 
-# take pollen types that occur in at least 3 samples
-pollen_samples_noNA <- pollen_samples_noNA %>%
-  group_by(Family) %>%
-  filter(n_distinct(Slide_code) > 2) %>%
-  ungroup()
+# # take pollen types that occur in at least 3 samples
+# pollen_samples_known <- pollen_samples_known %>%
+#   group_by(Family) %>%
+#   filter(n_distinct(Slide_code) > 2) %>%
+#   ungroup()
+# 
+# # how many grains left in the samples?
+# pollen_samples_known %>% 
+#   group_by(Slide_code) %>% 
+#   summarise(count = sum(Count_scaled))
+# # a few with less than 200 or even 100, so remove those because they make inflate that plants importance
+# 
+# # make sure the sum of pollen counts is at least 200
+# pollen_samples_known <- pollen_samples_known %>%
+#   group_by(Slide_code) %>%
+#   filter(sum(Count_scaled) >= 200) %>%
+#   ungroup()
 
-# how many grains left in the samples?
-pollen_samples_noNA %>% 
-  group_by(Slide_code) %>% 
-  summarise(count = sum(Count_scaled))
-# s few with less than 200 or even 100, so remove those because they make inflate that plants importance
-
-# make sure the sum of pollen counts is at least 200
-pollen_samples_noNA <- pollen_samples_noNA %>%
-  group_by(Slide_code) %>%
-  filter(sum(Count_scaled) >= 200) %>%
-  ungroup()
-
+# sample size
+length(unique(pollen_samples_known$Bee_ID)) # 39 / 49
+length(unique(pollen_samples_known$Slide_code)) # 65 / 83
 
 # Data for pollen samples
 # take columns
-pollen_samples_noNA_wide <- pollen_samples_noNA %>% select(Bee_ID, Slide_code, Site, Family, Count_scaled)
+pollen_samples_known_wide <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Season, Family, Count_scaled)
 # pivot wider
-pollen_samples_noNA_wide <- pivot_wider(pollen_samples_noNA_wide, names_from = 'Family', values_from = 'Count_scaled', id_cols = c(Bee_ID, Slide_code, Site))
+pollen_samples_known_wide <- pivot_wider(pollen_samples_known_wide, names_from = 'Family', values_from = 'Count_scaled', id_cols = c(Num_ID, Slide_code, Site, Season))
 # replace NA with 0
-pollen_samples_noNA_wide[is.na(pollen_samples_noNA_wide)] <- 0
+pollen_samples_known_wide[is.na(pollen_samples_known_wide)] <- 0
+
+
+
 
 
 # Data for 50m abundance
-# take columns 
-abundance_wide_50 <- pollen_samples_noNA %>% select(Slide_code, Family, Abundance_for50)
-# paste abundance to names
-abundance_wide_50$Subtype <- with(abundance_wide_50, paste0('Abundance_', Family), sep = '_')
+# take columns
+abundance_wide_50 <- m_50 %>% select(Site, Season, Family, Abundance_for50)
 # pivot wider
-abundance_wide_50 <- pivot_wider(abundance_wide_50, names_from = 'Family', values_from = 'Abundance_for50', id_cols = Slide_code)
+abundance_wide_50 <- pivot_wider(abundance_wide_50, names_from = 'Family', values_from = 'Abundance_for50', id_cols = c(Site, Season))
 # replace NA with 0
 abundance_wide_50[is.na(abundance_wide_50)] <- 0
 
-# Data for 200m abundance
-# take columns 
-abundance_wide_200 <- pollen_samples_noNA %>% select(Slide_code, Family, Abundance_for200)
-# paste abundance to names
-abundance_wide_200$Subtype <- with(abundance_wide_200, paste0('Abundance_', Family), sep = '_')
-# pivot wider
-abundance_wide_200 <- pivot_wider(abundance_wide_200, names_from = 'Family', values_from = 'Abundance_for200', id_cols = Slide_code)
-# replace NA with 0
-abundance_wide_200[is.na(abundance_wide_200)] <- 0
+
+
+
+
+
+
+
+
+
+
+
+
+# # Data for 50m abundance
+# # take columns 
+# abundance_wide_50 <- pollen_samples_known %>% select(Slide_code, Family, Abundance_for50)
+# # pivot wider
+# abundance_wide_50 <- pivot_wider(abundance_wide_50, names_from = 'Family', values_from = 'Abundance_for50', id_cols = Slide_code)
+# # replace NA with 0
+# abundance_wide_50[is.na(abundance_wide_50)] <- 0
+# 
+# # Data for 200m abundance
+# # take columns 
+# abundance_wide_200 <- pollen_samples_known %>% select(Slide_code, Family, Abundance_for200)
+# # pivot wider
+# abundance_wide_200 <- pivot_wider(abundance_wide_200, names_from = 'Family', values_from = 'Abundance_for200', id_cols = Slide_code)
+# # replace NA with 0
+# abundance_wide_200[is.na(abundance_wide_200)] <- 0
 
 # make Bee_ID it's own thing
-Bee_ID <- pollen_samples_noNA_wide$Bee_ID
+Num_ID <- pollen_samples_known_wide$Num_ID
 # make samples numerical (other columns required before)
-pollen_samples_noNA_wide_num <- pollen_samples_noNA_wide %>% select(-Bee_ID, -Slide_code, -Site)
+pollen_samples_known_wide_num <- pollen_samples_known_wide %>% select(-Num_ID, -Slide_code, -Site)
 
 # make abundance numerical (other columns required before)
 abundance_wide_50 <- abundance_wide_50 %>% select(-Slide_code)
 abundance_wide_200 <- abundance_wide_200 %>% select(-Slide_code)
 
 
-
 ## RDA for 50m
 
-rda_50 <- cca(pollen_samples_noNA_wide_num ~ . + Condition(Bee_ID),
+rda_50 <- cca(pollen_samples_known_wide_num ~ . + Condition(Num_ID),
            data = abundance_wide_50)
 
 plot(rda_50) # nice! 
@@ -338,7 +363,7 @@ summary(rda_50)
 
 ## RDA for 200m
 
-rda_200 <- cca(pollen_samples_noNA_wide_num ~ . + Condition(Bee_ID),
+rda_200 <- cca(pollen_samples_known_wide_num ~ . + Condition(Num_ID),
            data = abundance_wide_200)
 
 plot(rda_200) # nice! 
@@ -361,24 +386,54 @@ three <- paletteer_dynamic("cartography::pink.pal", 20)
 
 pal <- rbind(one, two, three)
 
-cols <- as.factor(pollen_samples_noNA_wide$Bee_ID)
+cols <- as.factor(pollen_samples_known_wide$Num_ID)
 # pal <- grDevices::hcl.colors(nlevels(cols), palette = "Set 2")
 col_map <- setNames(pal, levels(cols))
 bp <- scores(rda, display = "bp")
 
 
+
+#### whats with the diagonal line?
+
+# try plotting only flower constant bees with the same abundance
+# 
+# # paste abundance to names
+# names(abundance_wide_50)[2:9] <- paste0("Abundance_", names(abundance_wide_50)[2:9])
+#   
+# # add abundance 
+# flow_con_x <- left_join(pollen_samples_known_wide, abundance_wide_50, by = 'Slide_code')
+# 
+# # take flower constant samples 
+# flow_con_x <- flow_con_x %>% filter(Plantaginaceae >= 285)
+# 
+
+
+
+
+
+abundance_wide_50 %>%
+  filter(Slide_code %in% c(flow_con_x$Slide_code))
+
+
+
+
+
 # Save fig I
-# jpeg(file.path(('Figures/'), "RDA.jpg"),
-#      width = 4000, height = 4000, res = 500)
+ jpeg(file.path(('Figures/'), "RDA_50m.jpg"),
+      width = 4600, height = 3500, res = 500)
 
 
 ## 50 m ##
 
 plot(rda_50, type = "n")
 points(rda_50, display = "sites", col = cols, pch = 16)
-text(rda_50, display = "sites", # bee ID labels
-     labels = pollen_samples_noNA_wide$Bee_ID,
-     cex = 0.4)
+# text(rda_50, display = "sites", # bee ID labels
+#      labels = pollen_samples_known_wide$Num_ID,
+text(rda_50, display = "sites",
+    labels = ifelse(pollen_samples_known_wide$Slide_code %in% flow_con_x$Slide_code,
+                    pollen_samples_known_wide$Slide_code, ""),
+     cex = 0.9, # size of bee ID label
+     pos = 3, offset = 0.3) # above
 points(rda_50, display = "sites", 
        col = col_map[cols], 
        pch = 16)
@@ -392,17 +447,24 @@ text(rda_50, display = "bp",
 
 
 # Save fig II
-# dev.off()
+ dev.off()
 
 
-
+ 
+# Save fig I
+ jpeg(file.path(('Figures/'), "RDA_200m.jpg"),
+      width = 4600, height = 3500, res = 500)
+ 
+ 
 ## 200 m ##
 
 plot(rda_200, type = "n")
 points(rda_200, display = "sites", col = cols, pch = 16)
 text(rda_200, display = "sites", # bee ID labels
-     labels = pollen_samples_noNA_wide$Bee_ID,
-     cex = 0.4)
+     labels = pollen_samples_known_wide$Num_ID,
+     cex = 0.6, # size of bee ID label
+     pos = 3, offset = 0.3, # above dot
+     col = "grey30") 
 points(rda_200, display = "sites", 
        col = col_map[cols], 
        pch = 16)
@@ -414,7 +476,9 @@ arrows(0, 0,
 text(rda_200, display = "bp",
      col = "black", cex = 0.8) # size of text
 
-
+# Save fig II
+ dev.off()
+ 
 
 ```
 
@@ -445,9 +509,6 @@ pollen_beehav %>%
   count(Social_status_at_time_lib)
 # 7 social, 19 solitary for liberal estimate 
 # 58% and 58%
-
-
-
 
 
 
