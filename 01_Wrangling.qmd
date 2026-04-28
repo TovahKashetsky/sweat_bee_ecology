@@ -460,20 +460,6 @@ compiled_KB_200_late <- compiled_KB_200_late %>%
   ungroup()
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 # # compile them
 # m_50 <- rbind(JAM_50_early, KB_50_early, JAM_50_late, KB_50_late)
 # m_200 <- rbind(JAM_200_early, KB_200_early, JAM_200_late, KB_200_late)
@@ -481,6 +467,7 @@ compiled_KB_200_late <- compiled_KB_200_late %>%
 # # bind and take columns I need
 # m_50 <- m_50 %>% select(-Subsite, -Common_name, -Date, -Range)
 # m_200 <- m_200 %>% select(-Subsite, -Common_name, -Date, -Range)
+# 
 
 
 ```
@@ -886,28 +873,6 @@ pollen_samples <- pollen_samples %>% mutate(Season = ifelse(Slide_code == 'K-273
 
 
 
-## For the RDA abundance
-
-for_rda_50 <- pollen_samples %>% select(Slide_code, Family, Abundance_for50)
-
-# pivot wider
-for_rda_50 <- pivot_wider(for_rda_50, names_from = 'Family', values_from = 'Abundance_for50', id_cols = Slide_code)
-# replace NA with 0
-abundance_wide_50[is.na(abundance_wide_50)] <- 0
-
-
-
-
-
-
-
-
-
-
-
-
-
-
 ```
 
 ```{r Behaviour_data}
@@ -1282,6 +1247,120 @@ pollen_samples <- pollen_samples %>% mutate(Num_ID = ifelse(Bee_ID == 'JAM_Y-YYY
 
 ```
 
+```{r Abundance_for_RDA}
+
+
+## Make df for abundance with all plant families for the RDA
+
+# pivot the abundance wider
+compiled_JAM_50_early_wide <- pivot_wider(compiled_JAM_50_early, names_from = 'Family', values_from = 'Abundance_for50_comp', id_cols = c(Site, Season))
+compiled_JAM_50_late_wide <- pivot_wider(compiled_JAM_50_late, names_from = 'Family', values_from = 'Abundance_for50_comp', id_cols = c(Site, Season))
+compiled_KB_50_early_wide <- pivot_wider(compiled_KB_50_early, names_from = 'Family', values_from = 'Abundance_for50_comp', id_cols = c(Site, Season))
+compiled_KB_50_late_wide <- pivot_wider(compiled_KB_50_late, names_from = 'Family', values_from = 'Abundance_for50_comp', id_cols = c(Site, Season))
+compiled_JAM_200_early_wide <- pivot_wider(compiled_JAM_200_early, names_from = 'Family', values_from = 'Abundance_for200_comp', id_cols = c(Site, Season))
+compiled_JAM_200_late_wide <- pivot_wider(compiled_JAM_200_late, names_from = 'Family', values_from = 'Abundance_for200_comp', id_cols = c(Site, Season))
+compiled_KB_200_early_wide <- pivot_wider(compiled_KB_200_early, names_from = 'Family', values_from = 'Abundance_for200_comp', id_cols = c(Site, Season))
+compiled_KB_200_late_wide <- pivot_wider(compiled_KB_200_late, names_from = 'Family', values_from = 'Abundance_for200_comp', id_cols = c(Site, Season))
+
+# arrange by date
+pollen_samples <- pollen_samples %>% arrange(Date_pollen)
+
+# take columns I need
+pollen_samples_for_rda <- pollen_samples %>% select(Site, Season, Num_ID, Slide_code, Family, Count_scaled)
+
+# remove unknowns
+pollen_samples_for_rda_known <- pollen_samples_for_rda %>% filter(!is.na(Season))
+
+# pivot wider so the rows are identical
+pollen_samples_for_rda_known <- pivot_wider(pollen_samples_for_rda_known, names_from = 'Family', values_from = 'Count_scaled', id_cols = c(Num_ID, Slide_code, Site, Season))
+
+# delete columns of pollen counts
+pollen_samples_for_rda_known <- pollen_samples_for_rda_known %>% select(Num_ID, Slide_code, Site, Season)
+
+
+# divide by survey, most confident way to ensure proper combination 
+pollen_rda_JAM_early <- pollen_samples_for_rda_known %>% filter(Season == 'early/mid' & Site == 'JAM')
+pollen_rda_JAM_late <- pollen_samples_for_rda_known %>% filter(Season == 'late' & Site == 'JAM')
+pollen_rda_KB_early <- pollen_samples_for_rda_known %>% filter(Season == 'early/mid' & Site == 'KB')
+# pollen_rda_KB_late <- pollen_samples_for_rda_known %>% filter(Season == 'late' & Site == 'KB') <-- 0 observations
+
+
+## 50 m
+
+rda_abundance_JAM_50_early <- left_join(pollen_rda_JAM_early, compiled_JAM_50_early_wide)
+rda_abundance_JAM_50_late <- left_join(pollen_rda_JAM_late, compiled_JAM_50_late_wide)
+rda_abundance_KB_50_early <- left_join(pollen_rda_KB_early, compiled_KB_50_early_wide)
+
+# before joining JAM dfs, they all need the same column names
+setdiff(names(rda_abundance_JAM_50_early), names(rda_abundance_JAM_50_late))
+# in early but not late df: "Argophyllaceae" "Asphodelaceae"  "Celastraceae"   "Geraniaceae"   
+setdiff(names(rda_abundance_JAM_50_late), names(rda_abundance_JAM_50_early))
+# in late but not early: "Cucurbitaceae" "Iridaceae"     "Lamiaceae"     "Liliaceae"     "Polygonaceae"  "Rutaceae"      "Tropaeolaceae"
+
+# make the new columns and fill with 0
+new_cols_for_early_50 <- c("Cucurbitaceae", "Iridaceae", "Lamiaceae", "Liliaceae", "Polygonaceae", "Rutaceae", "Tropaeolaceae")
+rda_abundance_JAM_50_early[new_cols_for_early_50] <- 0
+new_cols_for_late_50 <- c("Argophyllaceae", "Asphodelaceae", "Celastraceae", "Geraniaceae")
+rda_abundance_JAM_50_late[new_cols_for_late_50] <- 0
+
+# bind these JAM 50 surveys together
+rda_abundance_JAM_50 <- rbind(rda_abundance_JAM_50_late, rda_abundance_JAM_50_early)
+
+# compare JAM to KB
+setdiff(names(rda_abundance_JAM_50), names(rda_abundance_KB_50_early))
+# "Caprifoliaceae" "Cucurbitaceae"  "Iridaceae"      "Lamiaceae"      "Liliaceae"      "Rutaceae"       "Argophyllaceae" "Asphodelaceae"  "Celastraceae"   "Geraniaceae" 
+setdiff(names(rda_abundance_KB_50_early), names(rda_abundance_JAM_50))
+# "Asparagaceae"  "Boraginaceae"  "Linaceae"      "Orobanchaceae" "Papaveraceae"  "Violaceae"    
+
+# make the new columns 
+new_cols_for_KB_50 <- c("Caprifoliaceae", "Cucurbitaceae", "Iridaceae", "Lamiaceae", "Liliaceae", "Rutaceae", "Argophyllaceae", "Asphodelaceae", "Celastraceae", "Geraniaceae")
+rda_abundance_KB_50_early[new_cols_for_KB_50] <- 0
+new_cols_for_JAM_50 <- c("Asparagaceae", "Boraginaceae", "Linaceae", "Orobanchaceae", "Papaveraceae", "Violaceae")
+rda_abundance_JAM_50[new_cols_for_JAM_50] <- 0
+
+# bind JAM and KB together
+rda_abundance_50 <- rbind(rda_abundance_JAM_50, rda_abundance_KB_50_early)
+
+
+## 200 m
+
+rda_abundance_JAM_200_early <- left_join(pollen_rda_JAM_early, compiled_JAM_200_early_wide)
+rda_abundance_JAM_200_late <- left_join(pollen_rda_JAM_late, compiled_JAM_200_late_wide)
+rda_abundance_KB_200_early <- left_join(pollen_rda_KB_early, compiled_KB_200_early_wide)
+
+# before joining JAM dfs, they all need the same column names
+setdiff(names(rda_abundance_JAM_200_early), names(rda_abundance_JAM_200_late))
+# in early but not late df: "Anacardiaceae"  "Argophyllaceae" "Asteliaceae"    "Celastraceae"   "Cistaceae"      "Limnanthaceae"  "Malvaceae"  "Paeoniaceae"    "Rhamnaceae"     "Rubiaceae"      "Theaceae"   
+setdiff(names(rda_abundance_JAM_200_late), names(rda_abundance_JAM_200_early))
+# in late but not early: "Aizoaceae"        "Apocynaceae"      "Campanulaceae"    "Cucurbitaceae"    "Magnoliaceae"     "Scrophulariaceae"
+
+# make the new columns and fill with 0
+new_cols_for_early_200 <- c("Aizoaceae", "Apocynaceae", "Campanulaceae", "Cucurbitaceae", "Magnoliaceae", "Scrophulariaceae")
+rda_abundance_JAM_200_early[new_cols_for_early_200] <- 0
+new_cols_for_late_200 <- c("Anacardiaceae", "Argophyllaceae", "Asteliaceae", "Celastraceae", "Cistaceae", "Limnanthaceae", "Malvaceae", "Paeoniaceae", "Rhamnaceae", "Rubiaceae", "Theaceae")
+rda_abundance_JAM_200_late[new_cols_for_late_200] <- 0
+
+# bind these JAM 50 surveys together
+rda_abundance_JAM_200 <- rbind(rda_abundance_JAM_200_late, rda_abundance_JAM_200_early)
+
+# compare JAM to KB
+setdiff(names(rda_abundance_JAM_200), names(rda_abundance_KB_200_early))
+# "Alstroemeriaceae" "Amaryllidaceae"   "Araceae"          "Campanulaceae"    "Caprifoliaceae"   "Commelinaceae"   "Crassulaceae"     "Cucurbitaceae"    "Ericaceae"        "Escalloniaceae"   "Euphorbiaceae"    "Geraniaceae"     "Hydrangeaceae"    "Iridaceae"        "Liliaceae"        "Magnoliaceae"     "Montiaceae"       "Nymphaeaceae"    "Oleaceae"   "Plumbaginaceae"   "Saxifragaceae"    "Anacardiaceae"    "Argophyllaceae"   "Celastraceae"    "Cistaceae"        "Limnanthaceae"    "Malvaceae"        "Paeoniaceae"      "Rhamnaceae"       "Theaceae"
+setdiff(names(rda_abundance_KB_200_early), names(rda_abundance_JAM_200))
+# "Chenopodiaceae" "Elaeocarpaceae" "Gentianaceae"   "Griseliniaceae" "Icacinaceae"    "Linaceae"       "Loranthaceae"   "Moraceae"       "Pittosporaceae" "Rousseaceae"    "Smilacaceae"       
+
+# make the new columns 
+new_cols_for_KB_200 <- c("Alstroemeriaceae", "Amaryllidaceae", "Araceae", "Campanulaceae", "Caprifoliaceae", "Commelinaceae", "Crassulaceae", "Cucurbitaceae", "Ericaceae", "Escalloniaceae", "Euphorbiaceae", "Geraniaceae", "Hydrangeaceae", "Iridaceae", "Liliaceae", "Magnoliaceae", "Montiaceae", "Nymphaeaceae", "Oleaceae", "Plumbaginaceae", "Saxifragaceae", "Anacardiaceae", "Argophyllaceae", "Celastraceae", "Cistaceae", "Limnanthaceae", "Malvaceae", "Paeoniaceae", "Rhamnaceae", "Theaceae") 
+rda_abundance_KB_200_early[new_cols_for_KB_200] <- 0
+new_cols_for_JAM_200 <- c("Chenopodiaceae", "Elaeocarpaceae", "Gentianaceae", "Griseliniaceae", "Icacinaceae", "Linaceae", "Loranthaceae", "Moraceae", "Pittosporaceae", "Rousseaceae", "Smilacaceae")
+rda_abundance_JAM_200[new_cols_for_JAM_200] <- 0
+
+# bind JAM and KB together
+rda_abundance_200 <- rbind(rda_abundance_JAM_200, rda_abundance_KB_200_early)
+
+
+```
+
 ```{r Editing_data_for_results}
 
 
@@ -1395,12 +1474,7 @@ pollen_beehav_nest <- pollen_beehav_nest %>%
 # pollen_samples_cumu$Diversity_cumu <- diversity(pollen_samples_cumu[, taxa_cols], index = "shannon")
 
 
-
 # remove first index columns
-
-
-
-
 
 
 ```
@@ -1426,6 +1500,10 @@ write.csv(pollen_beehav_ind, 'Data/Pollen_and_Surveys/Pollen_richness_individual
 
 # pollen richness for nests  
 write.csv(pollen_beehav_nest, 'Data/Pollen_and_Surveys/Pollen_richness_nests_cleaned.csv')
+
+# survey data for RDA
+write.csv(rda_abundance_50, 'Data/Pollen_and_Surveys/Abundance_50m_cleaned.csv')
+write.csv(rda_abundance_200, 'Data/Pollen_and_Surveys/Abundance_200m_cleaned.csv')
 
 
 ```
