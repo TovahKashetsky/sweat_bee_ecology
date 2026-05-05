@@ -1241,13 +1241,15 @@ paint_IDs_KB <- paint_IDs_KB %>% rename(Bee_ID = Bee_ID_v2)
 # bind together
 paint_IDs <- rbind(paint_IDs_JAM, paint_IDs_KB)
 
-# mistake: painted two bees B-BPP, so there are two diff number codes (correct) for the same Bee ID
-
 # bind to dataframes
 pollen_samples <- left_join(pollen_samples, paint_IDs, by = 'Bee_ID')
 
 # mark Y-YYY as J-85
 pollen_samples <- pollen_samples %>% mutate(Num_ID = ifelse(Bee_ID == 'JAM_Y-YYY', 'J.85', Num_ID))
+
+# painted two bees B-BPP, so there are two diff number codes (correct) for the same Bee ID
+# so remove one. the num_ID doesnt matter
+pollen_samples <- pollen_samples %>% filter(Num_ID != 'J.83')
 
 
 ```
@@ -1369,55 +1371,70 @@ abundance_200 <- rbind(abundance_JAM_200, abundance_KB_200_early)
 ```{r Match_abudance_with_samples}
 
 
-## Match abundance with pollen samples --- this chunk matches all the taxa in floral surveys
+## Match abundance with pollen samples --- this chunk matches all the taxa in floral surveys, even if not in sample
 
 
 # remove NAs from the unknown pollen types no abundance data for unknowns)
 pollen_samples_known <- pollen_samples %>% filter(!is.na(Abundance_for50))
 
 # take columns
-pollen_samples_known_wide <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Season, Family, Count_scaled)
+pollen_samples_known_wide <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Date_pollen, Season, Family, Count_scaled)
 # pivot wider
-pollen_samples_known_wide <- pivot_wider(pollen_samples_known_wide, names_from = 'Family', values_from = 'Count_scaled', id_cols = c(Num_ID, Slide_code, Site, Season))
+pollen_samples_known_wide <- pivot_wider(pollen_samples_known_wide, names_from = 'Family', values_from = 'Count_scaled', id_cols = c(Num_ID, Slide_code, Site, Date_pollen, Season))
 # replace NA with 0
 pollen_samples_known_wide[is.na(pollen_samples_known_wide)] <- 0
 
 # arrange by num ID
 pollen_samples_known_wide <- pollen_samples_known_wide %>% arrange(Num_ID)
 abundance_50 <- abundance_50 %>% arrange(Num_ID)
+abundance_200 <- abundance_200 %>% arrange(Num_ID)
 
-# pivot longer
+# pivot samples longer
 pollen_samples_known_long <- pivot_longer(pollen_samples_known_wide, names_to = 'Family', values_to = 'Count_scaled', cols = c(Ranunculaceae:Ericaceae))
 
-
-
-
-
-# each individual should have 17 types
+# each individual should have 17 types ----- now 13??
 pollen_samples_known_long %>% 
   group_by(Num_ID, Slide_code) %>% 
   count(Num_ID)
 
-
+# pivot abundance data longer
 abundance_50_long <- pivot_longer(abundance_50, names_to = 'Family', values_to = 'Abundance_50', cols = c(Adoxaceae:Violaceae))
+abundance_200_long <- pivot_longer(abundance_200, names_to = 'Family', values_to = 'Abundance_200', cols = c(Adoxaceae:Smilacaceae))
 
-abundance_50_long <- abundance_50_long %>% select(-...1)
 
-# each individual sample should have 30 types
+# each individual sample should have 30 and 70 types
 abundance_50_long %>% 
+  group_by(Num_ID, Slide_code) %>% 
+  count(Num_ID)
+abundance_200_long %>% 
   group_by(Num_ID, Slide_code) %>% 
   count(Num_ID)
 
 
-
 # join together, and add 0 where the family is in the abundance data but not sample data
-joined <- abundance_50_long %>%
+joined_pollen_abundance_50 <- abundance_50_long %>%
   full_join(pollen_samples_known_long) %>%
   mutate(across(where(is.numeric), ~replace_na(.x, 0)))
+joined_pollen_abundance <- abundance_200_long %>%
+  full_join(joined_pollen_abundance_50) %>%
+  mutate(across(where(is.numeric), ~replace_na(.x, 0)))
 
-# try removing columns where both sample and abundance are zero
+# fill in date throughout the sample
+joined_pollen_abundance <- joined_pollen_abundance %>%
+  arrange(Date_pollen, Slide_code) %>%
+  group_by(Slide_code) %>%
+  fill(Date_pollen)
 
-joined <- joined %>% filter(Abundance_50 != 0 | Count_scaled != 0)
+joined_pollen_abundance %>% 
+  group_by(Slide_code) %>% 
+  summarise(x = length((Date_pollen)))
+# 71
+
+
+
+# # try removing columns where both sample and abundance are zero
+# 
+# joined_pollen_abundance <- joined_pollen_abundance %>% filter(Abundance_50 != 0 | Count_scaled != 0)
 
 
 
@@ -1436,7 +1453,6 @@ pollen_samples <- pollen_samples %>%
   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
 # move earlier
 pollen_samples <- pollen_samples %>% relocate(Day_of_season, .after = Date_pollen)
-
 
 
 ## Create richness (number of plant subtypes)
@@ -1464,6 +1480,8 @@ pollen_beehav <- pollen_beehav %>%
   mutate(Richness_ind_mean = mean(Richness_ind_mean_v1)) %>%
   ungroup()
 
+pollen_beehav <- pollen_beehav %>% select(-Richness_ind_mean_v1)
+
 # keep columns for individuals
 pollen_beehav_ind <- pollen_beehav %>% select(Nest, Bee_ID, Site, Date_pollen, Richness_ind_mean, Richness_ind, Social_status_at_time_con, Social_status_at_time_lib)
 # remove duplicates
@@ -1477,7 +1495,6 @@ pollen_beehav_nest <- distinct(pollen_beehav_nest)
 pollen_beehav_nest <- pollen_beehav_nest %>%
   filter(!(Social_status_at_time_con == "solitary" &
            Nest %in% c("J100", "J87", "J91")))
-
 
 
 ## For diversity and cumulative diversity 
@@ -1563,9 +1580,8 @@ write.csv(pollen_beehav_ind, 'Data/Pollen_and_Surveys/Pollen_richness_individual
 # pollen richness for nests  
 write.csv(pollen_beehav_nest, 'Data/Pollen_and_Surveys/Pollen_richness_nests_cleaned.csv')
 
-# survey data for RDA
-write.csv(abundance_50, 'Data/Pollen_and_Surveys/Abundance_50m_cleaned.csv')
-write.csv(abundance_200, 'Data/Pollen_and_Surveys/Abundance_200m_cleaned.csv')
+# pollen samples and full floral abundance
+write.csv(joined_pollen_abundance, 'Data/Pollen_and_Surveys/Pollen_samples_abundance_cleaned.csv')
 
 
 ```
