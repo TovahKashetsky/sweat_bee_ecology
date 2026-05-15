@@ -107,6 +107,13 @@ survey <- read_csv('/Users/faith/Desktop/U Ottawa/PhD Chapter 3/sweat_bee_ecolog
 survey$Subtype <- str_replace(survey$Subtype, "^\\w{1}", toupper)
 survey$Family <- str_replace(survey$Family, "^\\w{1}", toupper)
 
+
+# remove the plants I didn't observe flowering
+# I logged these from Janice's list (the property owner of site KB) or from seeing abundant plants that looked lie they recently finished blooming, in case bees collected from them before I did my survey
+# this property had dense forrested patches on hills, so I did my best to get through them to sample all plants, but just in case I missed some, I used the list provided by Janice too (this list goes beyond the 200m radius though, so I might've not missed any, and if the plants were flowerings I didn't note them)
+survey <- survey %>% filter(!grepl('not seen', Abundance))
+
+
 # check the unique taxa, any diplucates from spelling erorrs? nothing jumpes out
 unique(survey$Subtype)
 # take only first word (e.g., ignore "fruiting" because the survey was mid season, so coudlve been fruiting in early season)
@@ -263,6 +270,10 @@ JAM_200_early <- select(JAM_200_early, -Abundance)
 KB_200_early <- select(KB_200_early, -Abundance)
 JAM_200_late <- select(JAM_200_late, -Abundance)
 KB_200_late <- select(KB_200_late, -Abundance)
+
+
+
+
 
 
 
@@ -1758,10 +1769,11 @@ pollen <- pollen %>% filter(Num_ID != 'J.83')
 
 ```
 
-```{r Add_taxa_into_surveys_if_Bees_collected_outside_of_radius}
+```{r Add_taxa_into_surveys_if_bees_collected_outside_of_radius}
 
 
 ## Before matching with samples, are any types in the pollen samples not in the floral suvreys?
+
 
 # make Season column in pollen data
 pollen <- pollen %>% 
@@ -1774,7 +1786,7 @@ length(pollen_samples_known$Site) # 132
 pollen %>% filter(grepl('Unknown', Subtype)) # 15 unknowns were removed
 
 # take columns I need
-pollen_samples_known <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Date_pollen, Season, Subtype, Count_scaled)
+pollen_samples_known <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Date_pollen, Season, Family, Subtype, Count_scaled)
 
 
 # divide pollen samples by corresponding survey (already removed unknowns)
@@ -1819,7 +1831,7 @@ subtypes_com_fam_KB_50_early <- subtypes_com_fam_KB_50_early %>% add_row(Site = 
 # KB 50 late - what was is missing
 pollen_samples_KB_late %>% filter(!Subtype %in% subtypes_com_fam_KB_50_late$Subtype)
 # nothing
-subtypes_com_fam_KB_50_late <- subtypes_com_fam_KB_50_late %>% add_row(Site = 'KB', Season = 'early/mid', Subtype = 'Gramineae', Family = 'Gramineae', Abundance_for50 = 5)
+subtypes_com_fam_KB_50_late <- subtypes_com_fam_KB_50_late %>% add_row(Site = 'KB', Season = 'late', Subtype = 'Gramineae', Family = 'Gramineae', Abundance_for50 = 5)
 
 
 # JAM 200 early - what was is missing
@@ -1848,8 +1860,6 @@ subtypes_com_fam_KB_200_late <- subtypes_com_fam_KB_200_late %>% add_row(Site = 
 
 
 
-
-
 ```
 
 ```{r Match_abundance_with_samples}
@@ -1857,132 +1867,74 @@ subtypes_com_fam_KB_200_late <- subtypes_com_fam_KB_200_late %>% add_row(Site = 
 
 ## Match abundance with pollen samples 
 
-## Can only match for Subtype OR Family. So do subtype
+# compile pollen samples and abundance data
+pollen_samples_all <- bind_rows(pollen_samples_JAM_early, pollen_samples_JAM_late, pollen_samples_KB_early, pollen_samples_KB_late)
+
+## 50 m ##
+
+abundance_50m <- bind_rows(subtypes_com_fam_JAM_50_early, subtypes_com_fam_JAM_50_late, subtypes_com_fam_KB_50_early, subtypes_com_fam_KB_50_late)
+
+# take bee pollen sample descriptors
+sample_desc <- pollen_samples_all %>%
+  distinct(Num_ID, Slide_code, Site, Date_pollen, Season)
+
+# left join so every bee sample gets a row for every taxon in abundance by site and season (to match survey)
+samples_and_abund_50 <- sample_desc %>%
+  left_join(abundance_50m, by = c("Site", "Season")) 
+
+# left-join pollen counts in
+samples_and_abund_50 <- samples_and_abund_50 %>%
+  left_join(
+    pollen_samples_all %>% select(Num_ID, Slide_code, Subtype, Family, Count_scaled),
+    by = c("Num_ID", "Slide_code", 'Family', "Subtype")
+  ) %>%
+  mutate(Count_scaled = replace_na(Count_scaled, 0)) # add 0 for taxa not in pollen sample
+
+# let's inspect!
+# should have identical numbers per slide code for each of the 4 surveys 
+samples_and_abund_50 %>% 
+  group_by(Season, Site, Slide_code) %>% 
+  summarise(length = length(Slide_code))
+
+# these should match
+sum(samples_and_abund_50$Count_scaled)
+sum(pollen_samples_all$Count_scaled)
+# excellent
+
+## 200 m ##
+
+abundance_200m <- bind_rows(subtypes_com_fam_JAM_200_early, subtypes_com_fam_JAM_200_late, subtypes_com_fam_KB_200_early, subtypes_com_fam_KB_200_late)
+
+# already have bee pollen sample descriptors
+sample_desc 
+
+# left join so every bee sample gets a row for every taxon in abundance by site and season (to match survey)
+samples_and_abund_200 <- sample_desc %>%
+  left_join(abundance_200m, by = c("Site", "Season")) 
+
+# left-join pollen counts in
+samples_and_abund_200 <- samples_and_abund_200 %>%
+  left_join(
+    pollen_samples_all %>% select(Num_ID, Slide_code, Subtype, Family, Count_scaled),
+    by = c("Num_ID", "Slide_code", 'Family', "Subtype")
+  ) %>%
+  mutate(Count_scaled = replace_na(Count_scaled, 0)) # add 0 for taxa not in pollen sample
+
+# let's inspect!
+# should have identical numbers per slide code for each of the 4 surveys 
+samples_and_abund_200 %>% 
+  group_by(Season, Site, Slide_code) %>% 
+  summarise(length = length(Slide_code))
+
+# these should match
+sum(samples_and_abund_200$Count_scaled)
+sum(pollen_samples_all$Count_scaled)
+# great
 
 
-# # make Season column in pollen data
-# pollen <- pollen %>% 
-#   mutate(Season = ifelse(format(Date_pollen, "%Y") == "2024", "early/mid", "late"))
-# 
-# # remove NAs from the unknown pollen types no abundance data for unknowns)
-# pollen_samples_known <- pollen %>% filter(!grepl('Unknown', Subtype))
-# length(pollen$Site) # 147
-# length(pollen_samples_known$Site) # 132
-# pollen %>% filter(grepl('Unknown', Subtype)) # 15 unknowns were removed
-# 
-# 
-# # take columns I need
-# pollen_samples_known <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Date_pollen, Season, Subtype, Count_scaled)
-
-
-## Divide the pollen samples into JAM and KB, early and late. Then make a df for each of those for the 50 m and 200 m
-
-pollen_samples_JAM_early <- pollen_samples_known %>% filter(Site == 'JAM' & Season == 'early/mid')
-
-
-
-# pivot samples wider
-pollen_samples_JAM_early_wide <- pollen_samples_JAM_early %>% 
-  pivot_wider(names_from = 'Subtype', values_from = 'Count_scaled', id_cols = c(Num_ID, Slide_code, Site, Date_pollen, Season))
-# replace NA with 0
-pollen_samples_JAM_early_wide[is.na(pollen_samples_JAM_early_wide)] <- 0
-
-# # pivot logner
-# pollen_samples_JAM_early_long <- pivot_longer(pollen_samples_JAM_early_wide, names_to = 'Subtype', values_to = 'Count_scaled', cols = 6:last_col(),)
-
-
-# # pivot abundance wider
-# subtypes_com_fam_JAM_50_early_wide <- subtypes_com_fam_JAM_50_early %>%
-#     pivot_wider(names_from = 'Subtype', values_from = 'Abundance_for50', id_cols = c(Site, Season))
-
-
-joined <- full_join(pollen_samples_JAM_early, subtypes_com_fam_JAM_50_early)
-
-
-
-
-
-
-
-
-
-
-
-
-
-# 
-# # take columns
-# pollen_samples_known_wide <- pollen_samples_known %>% select(Num_ID, Slide_code, Site, Date_pollen, Season, Family, Count_scaled)
-# pivot wider
-pollen_samples_JAM_early_wide <- pivot_wider(pollen_samples_JAM_early, names_from = 'Subtype', values_from = 'Count_scaled', id_cols = c(Num_ID, Slide_code, Site, Date_pollen, Season, Family))
-# replace NA with 0
-pollen_samples_JAM_early_wide[is.na(pollen_samples_JAM_early_wide)] <- 0
-
-
-
-
-# # arrange by num ID
-# pollen_samples_known_wide <- pollen_samples_known_wide %>% arrange(Num_ID)
-# abundance_50 <- abundance_50 %>% arrange(Num_ID)
-# abundance_200 <- abundance_200 %>% arrange(Num_ID)
-
-# pivot samples longer
-pollen_samples_known_long <- pivot_longer(pollen_samples_known_wide, names_to = 'Family', values_to = 'Count_scaled', cols = c(Ranunculaceae:Adoxaceae))
-
-# each individual should have 17 types
-pollen_samples_known_long %>% 
-  group_by(Num_ID, Slide_code) %>% 
-  count(Num_ID)
-
-
-
-# pivot abundance data longer
-abundance_50_long <- pivot_longer(subtypes_com_fam_JAM_50_early, names_to = 'Family', values_to = 'Abundance_50', cols = c(Adoxaceae:Violaceae))
-abundance_200_long <- pivot_longer(abundance_200, names_to = 'Family', values_to = 'Abundance_200', cols = c(Adoxaceae:Smilacaceae))
-
-
-# each individual sample should have 30 and 70 types
-abundance_50_long %>% 
-  group_by(Num_ID, Slide_code) %>% 
-  count(Num_ID)
-abundance_200_long %>% 
-  group_by(Num_ID, Slide_code) %>% 
-  count(Num_ID)
-
-
-# join together, and add 0 where the family is in the abundance data but not sample data
-joined_pollen_abundance_50 <- abundance_50_long %>%
-  full_join(pollen_samples_known_long) %>%
-  mutate(across(where(is.numeric), ~replace_na(.x, 0)))
-joined_pollen_abundance <- abundance_200_long %>%
-  full_join(joined_pollen_abundance_50) %>%
-  mutate(across(where(is.numeric), ~replace_na(.x, 0)))
-
-# fill in date throughout the sample
-joined_pollen_abundance <- joined_pollen_abundance %>%
-  arrange(Date_pollen, Slide_code) %>%
-  group_by(Slide_code) %>%
-  fill(Date_pollen)
-
-joined_pollen_abundance %>% 
-  group_by(Slide_code) %>% 
-  summarise(x = length((Date_pollen)))
-# 71
-
-
-
-# # try removing columns where both sample and abundance are zero
-# 
-# joined_pollen_abundance <- joined_pollen_abundance %>% filter(Abundance_50 != 0 | Count_scaled != 0)
-
-# # how does this compare with pollen survey abundance from the other shiunk?
-# x_pollen_samples <- pollen_samples %>% distinct(Family, Season, Site, Abundance_for50, Abundance_for200)
-# x_joined <- joined_pollen_abundance %>%
-#   ungroup() %>% 
-# distinct(Family, Season, Site, Abundance_50, Abundance_200)
-# 
-# comaprd <- left_join(x_pollen_samples, x_joined)
-# 
+## Add together two dfs 
+pollen_samples <- full_join(samples_and_abund_50, samples_and_abund_200) 
+# keep the taxa NA for abundance when it appears in the 200 but not 50 m radius
 
 
 
@@ -1994,13 +1946,13 @@ joined_pollen_abundance %>%
 ## Editing data for analyses and figures
 
 
-## Create day of season 
-
-season_start <- as.Date("2024-11-07") # first day of collected pollen
-pollen_samples <- pollen_samples %>%
-  mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
-# move earlier
-pollen_samples <- pollen_samples %>% relocate(Day_of_season, .after = Date_pollen)
+# ## Create day of season 
+# 
+# season_start <- as.Date("2024-11-07") # first day of collected pollen
+# pollen_samples <- pollen_samples %>%
+#   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
+# # move earlier
+# pollen_samples <- pollen_samples %>% relocate(Day_of_season, .after = Date_pollen)
 
 
 ## Create richness (number of plant subtypes)
