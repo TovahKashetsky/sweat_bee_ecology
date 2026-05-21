@@ -12,7 +12,7 @@ library(tidyverse)
 library(vegan) # for NMDS, RDA, and PERMANOVA 
 library(lme4) # for GLMs
 library(performance) # for check_model  
-library(DHARMa) # for simulaitng residuals
+library(DHARMa) # for simulating residuals
 library(glmmTMB) # for glmmTMB
 
 # pollen data
@@ -28,7 +28,7 @@ beehav_full <- read_csv('Data/Behaviour/Behaviour_nest_full_cleaned.csv')
 pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
 # abundance data
-joined_pollen_abundance <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_abundance_cleaned.csv')
+pollen_samples_abundance <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_abundance_cleaned.csv')
 
 
 # set theme
@@ -498,30 +498,57 @@ pollen_samples %>%
 ### 2iv. Floral abundance
 
 
-# 50 m radius
-mod_abun_50 <- glmmTMB(Count_scaled ~ Abundance_50 + Family + (1 | Num_ID),
-        family = nbinom1(),
-        data = joined_pollen_abundance)
+# tried removing NAs but then I can;t compare AIC between the models
+# replace NAs with 0 so the 50m and 200m models have the same number of observations, so I can compare AIC between models
 
-check_model(mod_abun_50)
-plot(simulateResiduals(mod_abun_50))
+# tried this first to validate the model still works afterand it does!
+
+# pollen_samples_abundance_noNA <- pollen_samples_abundance %>% filter(!is.na(Abundance_for50))
+# mod_abun_50_noNA <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for50 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID),
+#         family = betabinomial(link = "logit"),
+#         data = pollen_samples_abundance_noNA)
+# check_model(mod_abun_50_noNA) # great
+# plot(simulateResiduals(mod_abun_50_noNA)) # minor issue
+# summary(mod_abun_50_noNA)
+
+
+# replace NAs with 0
+pollen_samples_abundance <- pollen_samples_abundance %>%
+  mutate(Abundance_for50 = replace_na(Abundance_for50, 0))
+
+# 50 m radius
+mod_abun_50 <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for50 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID),
+        family = betabinomial(link = "logit"),
+        data = pollen_samples_abundance)
+
+check_model(mod_abun_50) # great
+plot(simulateResiduals(mod_abun_50)) # minor issue
+testDispersion(mod_abun_50) # no overdispersion
+testZeroInflation(mod_abun_50) # no zero inflation
+testOutliers(mod_abun_50) # no sig outliers
+# so trust the summary
 summary(mod_abun_50)
 
 
 # 200 m radius
-mod_abun_200 <- glmmTMB(Count_scaled ~ Abundance_200 + (1 | Num_ID),
-        family = nbinom1(),
-        data = joined_pollen_abundance)
+mod_abun_200 <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for200 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID),
+        family = betabinomial(link = "logit"),
+        data = pollen_samples_abundance)
 
-check_model(mod_abun_200)
-plot(simulateResiduals(mod_abun_200))
+check_model(mod_abun_200) # great
+plot(simulateResiduals(mod_abun_200)) # minor issues again
+testDispersion(mod_abun_200) # no overdispersion
+testZeroInflation(mod_abun_200) # no zero inflation
+testOutliers(mod_abun_200) # no outliers
+# trust summary
 summary(mod_abun_200)
 
 
 # which model fits better?
-AIC(mod_abun_50) # 2584.811
-AIC(mod_abun_200) # 2573.273 <-- fits better
-AIC(mod_abun_50) - AIC(mod_abun_200) # 11.54 units lower
+AIC(mod_abun_50) # 2055.583 
+AIC(mod_abun_200) # 2062.732 
+AIC(mod_abun_200) - AIC(mod_abun_50) # <-- 50m model fits better by 7 units
+
 
 
 ```
@@ -580,24 +607,25 @@ pollen_beehav_ind <- pollen_beehav %>%
   group_by(Slide_code) %>% 
   distinct(Slide_code, .keep_all = TRUE)
 # keep columns that make sense
-pollen_beehav_ind <- pollen_beehav_ind %>% select(Nest, Site, Bee_ID, Slide_code, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_ind_mean)
+pollen_beehav_ind <- pollen_beehav_ind %>% select(Nest, Site, Bee_ID, Slide_code, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_ind)
 
 
 # GLMM
 
 # nest-level
 mod_richness_nest <- lm(Richness_nest ~ Social_status_ever_con + Site, data = pollen_beehav_nests)
+
 check_model(mod_richness_nest) # good
 plot(simulateResiduals(mod_richness_nest))
 summary(mod_richness_nest) # not significant
 
+
 # individual-level
-mod_richness_ind <- glmer(Richness_ind ~ Social_status_at_time_con + Site + (1|Bee_ID), data = pollen_beehav_ind_all, family = poisson)
+mod_richness_ind <- glmer(Richness_ind ~ Social_status_at_time_con + Site + (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
+
 check_model(mod_richness_ind) # great!
 plot(simulateResiduals(mod_richness_ind))
 summary(mod_richness_ind) # not significant, no diff with individual ID
-
-
 
 
 
