@@ -120,13 +120,13 @@ social_sum <- beehav_full %>%
 
 # a mix of social and solitary nests 
 
- #	J100 had1 female Jan 16th then another on Feb 4th while first was still active -- 2.5 weeks later
+
  #	J18 had 2 females last seen in Nov, had unmarked females between here and Jan, then an unmarked collecting pollen in Jan -- 7.5 weeks 
  #	J26 had a bee until nov 25 then on dec 17 another bee -- 3 weeks
  #	K13 one female collecting pollen, 6 weeks later another female use same entrance -- 6 weeks
  #	K23 marked female enters nest (never seen collect pollen though), then a month later another bee enters nest with no pollen -- 4 weeks
  #	K4 had one female then another female 8 weeks later -- 8 weeks
- # K8 one female then another female 6 weeks later -- 6 weeks
+ #  K8 one female then another female 6 weeks later -- 6 weeks
 
 
 ```
@@ -169,29 +169,40 @@ mean(mean_num_samples$count)
 # did not run because we had to exclude so many samples, ended up with 35/83 samples and 15/49 individuals
 
 
-### 2ii. Pollen composition comparison within and between individuals
-
+# ### 2ii. Pollen composition comparison within and between individuals
+# 
 # # take bees caught more than once
-# pollen_samples_xs <- pollen_samples %>% filter(Num_of_samples > 1)
+# pollen_samples_xs <- pollen_samples # %>% filter(Num_of_samples > 1)
 # 
-# # take pollen types that occur in more than one sample
-# pollen_samples_xs <- pollen_samples %>%
-#   group_by(Family) %>%
-#   filter(n_distinct(Slide_code) > 3) %>%
-#   ungroup()
+# # # take pollen types that occur in more than one sample
+# # pollen_samples_xs <- pollen_samples %>%
+# #   group_by(Family) %>%
+# #   filter(n_distinct(Slide_code) > 3) %>%
+# #   ungroup()
+# # 
+# # # make sure the sum of pollen counts is 300
+# # pollen_samples_xs <- pollen_samples_xs %>%
+# #   group_by(Slide_code) %>%
+# #   filter(sum(Count_scaled) == 300) %>%
+# #  ungroup()
 # 
-# # make sure the sum of pollen counts is 300
-# pollen_samples_xs <- pollen_samples_xs %>%
-#   group_by(Slide_code) %>%
-#   filter(sum(Count_scaled) == 300) %>%
-#   ungroup()
-# 
-# length(unique(pollen_samples_xs$Bee_ID)) # 22
-# length(unique(pollen_samples_xs$Slide_code)) # 42
+# length(unique(pollen_samples_xs$Bee_ID)) # 22 filtered, 49 unfiltered
+# length(unique(pollen_samples_xs$Slide_code)) # 42 filtered, 83 unfiltered
 # 
 # # pivot wider
 # pollen_samples_wide_xs <- pollen_samples_xs %>% select(Bee_ID, Slide_code, Date_pollen, Family, Count_scaled)
 # pollen_samples_wide_xs <- pivot_wider(pollen_samples_wide_xs, names_from = 'Family', values_from = 'Count_scaled', id_cols = c(Bee_ID, Slide_code, Date_pollen))
+# 
+# 
+# 
+# ## How many empty cells with unfiltered data (what we originally tried)
+# column_sum <- pollen_samples_wide_xs %>%
+#   summarise_all(~ sum(is.na(.)))
+# column_sum$row_total <- rowSums(column_sum)
+# # 1845 empty cells out of 83 rows with 24 taxa
+# 1845 / (83 * 24)
+# 
+# 
 # 
 # # replace NA with 0
 # pollen_samples_wide_xs[is.na(pollen_samples_wide_xs)] <- 0
@@ -208,6 +219,7 @@ mean(mean_num_samples$count)
 # length(unique(pollen_samples_wide_xs$Slide_code)) # 35 / 83
 # 
 # 
+# 
 # ## Create NMDS
 # 
 # nmds_pollen_comp <- metaMDS(pollen_samples_wide_xs[4:ncol(pollen_samples_wide_xs)], distance = 'bray', k = 2)
@@ -220,15 +232,15 @@ mean(mean_num_samples$count)
 # plot(nmds_pollen_comp)
 # scores(nmds_pollen_comp)
 # 
-# # extract NMDS scores for bees 
+# # extract NMDS scores for bees
 # nmds_sample_scores <- as.data.frame(scores(nmds_pollen_comp, display = "sites"))
-#   
+# 
 # # missing columns I want
 # nmds_sample_scores$Slide_code <- pollen_samples_wide_xs$Slide_code
 # nmds_sample_scores <- left_join(nmds_sample_scores, desc)
-#   
 # 
-# # Plot 
+# 
+# # Plot
 # 
 # # hulls (≥3 points)
 # hulls <- nmds_sample_scores %>%
@@ -241,7 +253,7 @@ mean(mean_num_samples$count)
 #   group_by(Bee_ID) %>%
 #   filter(n() == 2)
 # 
-# ggplot(nmds_sample_scores) + 
+# ggplot(nmds_sample_scores) +
 #   geom_polygon(data = hulls,
 #                aes(NMDS1, NMDS2, group = Bee_ID, fill = Bee_ID),
 #                alpha = 0.2) +
@@ -556,7 +568,6 @@ AIC(mod_abun_200) - AIC(mod_abun_50) # <-- 50m model fits better by 7 units
 ```{r Pollen_and_Sociality}
 
 
-
 ### 3i. FLower constancy and social status
 
 # insepct bees and samples with both social and pollen data
@@ -571,7 +582,7 @@ distinct %>%
 
 # flower constancy
 
-# total counts 
+# total counts 50
 pollen_beehav %>% 
   group_by(Social_status_at_time_con) %>% 
   summarise(Count = (length(unique(Slide_code))))
@@ -589,11 +600,18 @@ pollen_beehav %>%
   summarise(values = paste(unique(Social_status_at_time_con), collapse = ", "))
 # 3: JAM_P-PBG, JAM_W-OWW, JAM_W-PWO
 
+# how many samples were in each nest, for social vs solitary? If we had more samples form one type of nest, it could bias it, e.g., 4 samples per social nest but 2 per solitary
+slides_per_nest <- pollen_beehav %>% 
+  group_by(Social_status_ever_con, Nest) %>% 
+  summarise(slide_count = length(unique(Slide_code)))
+slides_per_nest %>% 
+  group_by(Social_status_ever_con) %>% 
+  summarise(mean_slide_count = mean(slide_count))
+# 2.4 for social nests
+# 1.7 for solitary nests
 
 
 ### 3ii. Pollen diversity and sociality 
-
-
 
 # remove duplicates of nests
 pollen_beehav_nests <- pollen_beehav %>% 

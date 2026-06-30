@@ -8,6 +8,8 @@ editor: visual
 
 library(tidyverse)
 library(ggplot2)
+library(ggtext) # making genera names italic with element_markdown()
+library(cowplot) # to put together panels
 
 
 # pollen data
@@ -40,11 +42,12 @@ theme_set(theme_classic())
 
 
 
+
 ```
 
 ```{r Pollen_figures}
 
- library(ggh4x) # facet wrap 2
+ # library(ggh4x) # facet wrap 2
 
 
 # make date labels for the figure
@@ -95,9 +98,9 @@ pollen_samples %>%
   summarise(count = sum(Count_scaled)) %>% 
   arrange(-count)
 # top 10:
- # Ranunculus				
- # Plantago				
- # Asteraceae				
+ # Ranunculus	5259 / 24897 = 21.1%			
+ # Plantago	4004 / 24897 = 16.1%			
+ # Asteraceae	3646 / 24897 = 14.6%			
  # Rubus				
  # Cichorieae				
  # Muehlenbeckia				
@@ -116,78 +119,42 @@ pollen_samples %>%
  # Unknown_7          
  # Leycesteria       
  # Caryophyllaceae   
- # Corokia           
+ # Corokia        
+
+pollen_samples %>% 
+  summarise(count = sum(Count_scaled))
+# total pollen grains: 24897
+
 
 
 ## Make colours
 
 # take inspo from this package
-library(paletteer)
+# library(paletteer)
 # paletteer_d("ggthemes::Tableau_20")
-
-c(
-  "Amaryllidaceae" = '#86BCB6FF',
-  "Asteraceae" = '#e685c1',
-  "Brassicaceae" = '#5682f0',
-  "Caryophyllaceae" = '#f5a9c4',
-  "Cichorieae" = '#E9BA31',
-  "Corokia" = '#fcf183',
-  "Poaceae" = '#d4e892', 
-  "Iridaceae" = '#fff0f3',
-  "Leycesteria" = '#b0f7ef',
-  "Lysimachia" = '#e36490',
-  "Muehlenbeckia" = '#e84343',
-  "Myrtaceae" = '#c0f0fa',
-  "Plantago" = '#a5cf1b',
-  "Pyracantha" = '#5d90c7',
-  "Ranunculus" = '#f7e211',
-  "Rhododendron" = '#fcbdc3',
-  "Rosaceae" = '#449450',
-  "Rubus" = '#7fd9eb',
-  "Solanum" = '#cf9b57',
-  "Unknown_1" = '#FFE7D1',
-  "Unknown_2" = '#FBAF7A',
-  "Unknown_3" = '#F78334',
-  "Unknown_4" = '#B96478',
-  "Unknown_5" = '#8449B3',
-  "Unknown_6" = '#B284D7',
-  "Unknown_7" = '#EDD9FC',
-  "Veronica" = '#a6bfff', 
-  "Viburnum" = '#cbe4f5'
-  )
-
-
-
-
-
-
-
-
-
-
 
 
 specific_colours <- c(
-  "Amaryllidaceae" = '#86BCB6FF', 
-  "Asteraceae" = '#EB5D5A', # Asteraceae
-  "Cichorieae" = '#EA866C', # Asteraceae
+  "Amaryllidaceae" = '#a34676', 
+  "Asteraceae" = '#EA866C', # Asteraceae
+  "Cichorieae" = '#E9BA31', # Asteraceae
   "Brassicaceae" = '#5682f0',
   "Caryophyllaceae" = '#449450',   ## RARE
-  "Corokia" = '#E9BA31',           ## RARE
-  "Iridaceae" = '#c2c1d4',         ## RARE
-  "Leycesteria" = '#994d74',       ## RARE
-  "Lysimachia" = '#e199f7',
+  "Corokia" = '#96e0d8',           ## RARE
+  "Iridaceae" = '#e199f7',         ## RARE
+  "Leycesteria" = '#EB5D5A',       ## RARE
+  "Lysimachia" = '#86BCB6',
   "Muehlenbeckia" = '#a6bfff',
   "Myrtaceae" = '#c0f0fa',
-  "Plantago" = '#a5cf1b', # Plantaginaceae
-  "Veronica" = '#d4e892', # Plantaginaceae            ## RARE
+  "Plantago" = '#9ec716', # Plantaginaceae
+  "Veronica" = '#d4e892', # Plantaginaceae ## RARE
   "Poaceae" = '#cf9b57',            ## RARE
   "Ranunculus" = '#f7e211',
-  "Rhododendron" = '#7fe3d4',       ## RARE
-  "Rosaceae" = '#d63c72', # Rosaceae
-  "Rubus" = '#f57fa9', # Rosaceae
-  "Pyracantha" = '#ffccde', # Rosaceae
-  "Solanum" = '#fcf183',           ## RARE 
+  "Rhododendron" = '#6F8FAF',       ## RARE
+  "Rosaceae" = '#f24180',   # Rosaceae
+  "Pyracantha" = '#f57fa9', # Rosaceae
+  "Rubus" = '#ffccde',      # Rosaceae
+  "Solanum" = '#cacad9',           ## RARE 
   "Viburnum" = '#cbe4f5',
   "Unknown_1" = '#FFE7D1',
   "Unknown_2" = '#FBAF7A', 
@@ -199,29 +166,23 @@ specific_colours <- c(
   )
 
 
-
-
-
-
 ## Text for legend
 
-library(ggtext)
-
-pollen_samples <- pollen_samples %>%
+pollen_samples <- pollen_samples %>% 
   mutate(Subtype_label = case_when(
-#    Subtype == "Ranunculus" ~ "<i>Ranunculus</i> (Ranunculaceae)",
+    Subtype == "Ranunculus" ~ "<i>Ranunculus</i> (Ranunculaceae)",
     Subtype == "Rubus" ~ "<i>Rubus</i> (Rosaceae)",
     Subtype == "Veronica" ~ "<i>Veronica</i> (Plantaginaceae)",
     Subtype == "Cichorieae" ~ "Cichorieae (Asteraceae)",
-#    Subtype == "Corokia" ~ "<i>Corokia</i> (Argophyllaceae)",
-#    Subtype == "Leycesteria" ~ "<i>Leycesteria</i> (Caprifoliaceae)",
-#    Subtype == "Lysimachia" ~ "<i>Lysimachia</i> (Primulaceae)",
-#    Subtype == "Muehlenbeckia" ~ "<i>Muehlenbeckia</i> (Polygonaceae)",    
+    Subtype == "Corokia" ~ "<i>Corokia</i> (Argophyllaceae)",
+    Subtype == "Leycesteria" ~ "<i>Leycesteria</i> (Caprifoliaceae)",
+    Subtype == "Lysimachia" ~ "<i>Lysimachia</i> (Primulaceae)",
+    Subtype == "Muehlenbeckia" ~ "<i>Muehlenbeckia</i> (Polygonaceae)",    
     Subtype == "Plantago" ~ "<i>Plantago</i> (Plantaginaceae)",
     Subtype == "Pyracantha" ~ "<i>Pyracantha</i> (Rosaceae)",
-#    Subtype == "Rhododendron" ~ "<i>Rhododendron</i> (Ericaceae)",
-#    Subtype == "Solanum" ~ "<i>Solanum</i> (Solanaceae)",    
-#    Subtype == "Viburnum" ~ "<i>Viburnum</i> (Adoxaceae)",
+    Subtype == "Rhododendron" ~ "<i>Rhododendron</i> (Ericaceae)",
+    Subtype == "Solanum" ~ "<i>Solanum</i> (Solanaceae)",    
+    Subtype == "Viburnum" ~ "<i>Viburnum</i> (Adoxaceae)",
     Subtype == 'Unknown_1' ~ 'Type 1',
     Subtype == 'Unknown_2' ~ 'Type 2',
     Subtype == 'Unknown_3' ~ 'Type 3',
@@ -253,8 +214,8 @@ pollen_samples <- pollen_samples %>%
     'Ranunculus',   
     'Rhododendron',    
     'Rosaceae',
-    'Rubus',   
     'Pyracantha',
+    'Rubus',
     'Solanum', 
     'Viburnum',        
     'Unknown_1',       
@@ -272,38 +233,40 @@ pollen_samples <- pollen_samples %>%
 samples_fig <- pollen_samples %>%
   arrange(Num_ID, Date_pollen) %>%
   ggplot(aes(x = Slide_code, y = Count, fill = Subtype)) +
-  geom_col(position = "fill", width = 0.8) +
+  geom_col(position = "fill", width = 0.8) + 
   labs(x = "Date", y = "Proportion of pollen sample") +
-  facet_wrap2(~ Num_ID, scales = "free_x", ncol = 10) +
+  facet_wrap(~ Num_ID, scales = "free_x", ncol = 7) +
  scale_x_discrete(labels = function(x) {
    pollen_samples$Date_label[match(x, pollen_samples$Slide_code)]
  }) +
   scale_fill_manual(
   values = specific_colours,
-  labels = pollen_samples %>% distinct(Subtype, Subtype_label) %>% deframe()
+  labels = pollen_samples %>% distinct(Subtype, Subtype_label) %>% deframe(),
+  name = "Pollen type" # legend title
   ) +
   theme(
-    axis.text.x = element_text(angle = 45, vjust = 0.6, size = 7, colour = "grey20"),
+    axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 7, colour = "grey20"), # date label
     strip.background = element_blank(),
-    strip.text = element_text(size = 8, colour = "grey70", hjust = 0),
+    strip.text = element_text(size = 7, colour = "grey60", hjust = 0),
     axis.ticks = element_line(linewidth = 0.35, colour = "grey20"), # make ticks thinner
-    legend.text = element_markdown(),   
+    legend.text = element_markdown(), # makes italics from <i> </i>
     axis.line.y = element_line(linewidth = 0.35, colour = "grey20"), # make lines thinner
-    axis.line.x = element_line(linewidth = 0.35, colour = "grey20")
+    axis.line.x = element_line(linewidth = 0.35, colour = "grey20"),
+    axis.title.y = element_text(size=14, margin = margin(r = 12)), # size and placement of axes labels
+    axis.title.x = element_text(size=14, vjust = -0.5)
     ) +
   scale_y_continuous(breaks = c(0, 0.5, 1)) + # breaks 
   guides(fill = guide_legend(ncol = 1)) # make legend one column instead of two
-  
-  
+
 samples_fig
 
-
 ## Save
-ggsave('Figures/Pollen_samples_fig.png', samples_fig, width = 9, height = 8, dpi = 300)
+ggsave('Figures/Pollen_samples_fig.png', samples_fig, width = 8.4, height = 9, dpi = 300)
+
 
 ```
 
-```{r }
+```{r Tried_facet_grid}
 
 # # plot with facat grid
 # 
@@ -448,8 +411,7 @@ ggsave('Figures/Pollen_samples_fig.png', samples_fig, width = 9, height = 8, dpi
 ## Abundance
 
 
-
-# # do both sites have identical taxa? I can only have one legend
+# # do both sites have identical taxa? I only want one legend with all taxa
 # JAM <- abundance_for_fig %>% 
 #   filter(Site == 'JAM') %>% 
 #   select(Subtype)
@@ -461,29 +423,31 @@ ggsave('Figures/Pollen_samples_fig.png', samples_fig, width = 9, height = 8, dpi
 
 
 # jitter the lines becasue some overlap
-pos <- position_jitter(width = 0, height = 0.1)
+pos <- position_jitter(width = 0, height = 0.12)
 
 
 # plot for JAM
 abund_fig_JAM <- abundance_for_fig %>% 
   filter(Site == 'JAM') %>% 
   ggplot(aes(x = Season, y = Abundance_for50, group = Subtype, colour = Subtype)) +
-  geom_jitter(alpha = 0.7, width = 0.05, height = 0.05) +
-  geom_line(position = pos, alpha = 0.7) +
+  geom_jitter(width = 0.07, height = 0.07) +
+  geom_line(position = pos) +
   scale_colour_manual(values = specific_colours) +
-  labs(x = NULL, y = NULL) + 
-  theme(legend.position = "none")
+  labs(x = '\n Site A', y = NULL) + 
+  theme(legend.position = "none") +
+  scale_x_discrete(label = c('Mid season', 'Late season'))
 
 
 # plot for KB
 abund_fig_KB <- abundance_for_fig %>% 
   filter(Site == 'KB') %>% 
   ggplot(aes(x = Season, y = Abundance_for50, group = Subtype, colour = Subtype)) +
-  geom_jitter(alpha = 0.7, width = 0.05, height = 0.05) +
-  geom_line(position = pos, alpha = 0.7) +
+  geom_jitter(width = 0.07, height = 0.07) +
+  geom_line(position = pos) +
   scale_colour_manual(values = specific_colours) +
-  labs(x = NULL, y = NULL) + 
-  theme(legend.position = "none")
+  labs(x = '\n Site B', y = NULL) + 
+  theme(legend.position = "none") +
+  scale_x_discrete(label = c('Mid season', 'Late season'))
 
 # order for the legend
 abundance_for_fig <- abundance_for_fig %>%
@@ -505,28 +469,28 @@ abundance_for_fig <- abundance_for_fig %>%
     'Ranunculus',   
     'Rhododendron',    
     'Rosaceae',
-    'Rubus',   
     'Pyracantha',
+    'Rubus',
     'Solanum', 
     'Viburnum'
     )))
 
-# text for the legend ####### didnt work for this label 
+# text for the legend 
 abundance_for_fig <- abundance_for_fig %>%
   mutate(Subtype_label = case_when(
-#    Subtype == "Ranunculus" ~ "<i>Ranunculus</i> (Ranunculaceae)",
+    Subtype == "Ranunculus" ~ "<i>Ranunculus</i> (Ranunculaceae)",
     Subtype == "Rubus" ~ "<i>Rubus</i> (Rosaceae)",
     Subtype == "Veronica" ~ "<i>Veronica</i> (Plantaginaceae)",
     Subtype == "Cichorieae" ~ "Cichorieae (Asteraceae)",
-#    Subtype == "Corokia" ~ "<i>Corokia</i> (Argophyllaceae)",
-#    Subtype == "Leycesteria" ~ "<i>Leycesteria</i> (Caprifoliaceae)",
-#    Subtype == "Lysimachia" ~ "<i>Lysimachia</i> (Primulaceae)",
-#    Subtype == "Muehlenbeckia" ~ "<i>Muehlenbeckia</i> (Polygonaceae)",    
+    Subtype == "Corokia" ~ "<i>Corokia</i> (Argophyllaceae)",
+    Subtype == "Leycesteria" ~ "<i>Leycesteria</i> (Caprifoliaceae)",
+    Subtype == "Lysimachia" ~ "<i>Lysimachia</i> (Primulaceae)",
+    Subtype == "Muehlenbeckia" ~ "<i>Muehlenbeckia</i> (Polygonaceae)",    
     Subtype == "Plantago" ~ "<i>Plantago</i> (Plantaginaceae)",
     Subtype == "Pyracantha" ~ "<i>Pyracantha</i> (Rosaceae)",
-#    Subtype == "Rhododendron" ~ "<i>Rhododendron</i> (Ericaceae)",
-#    Subtype == "Solanum" ~ "<i>Solanum</i> (Solanaceae)",    
-#    Subtype == "Viburnum" ~ "<i>Viburnum</i> (Adoxaceae)",
+    Subtype == "Rhododendron" ~ "<i>Rhododendron</i> (Ericaceae)",
+    Subtype == "Solanum" ~ "<i>Solanum</i> (Solanaceae)",    
+    Subtype == "Viburnum" ~ "<i>Viburnum</i> (Adoxaceae)",
     Subtype == 'Unknown_1' ~ 'Type 1',
     Subtype == 'Unknown_2' ~ 'Type 2',
     Subtype == 'Unknown_3' ~ 'Type 3',
@@ -539,17 +503,22 @@ abundance_for_fig <- abundance_for_fig %>%
 
 
 # I want a single legend with ALL taxa combined, so create a dummy plot to extract legend 
-all_taxa <- unique(abundance_for_fig$Subtype_label)
+all_taxa <- abundance_for_fig %>% distinct(Subtype) %>% pull(Subtype)
+
 dummy_plot <- data.frame(
-  Subtype_label = all_taxa,
+  Subtype = all_taxa,
   x = 1,
   y = 1
 ) %>%
-  ggplot(aes(x = x, y = y, colour = Subtype_label)) +
-  geom_point() +
-  scale_colour_manual(values = specific_colours, drop = FALSE) +
+  ggplot(aes(x = x, y = y, colour = Subtype)) +  # keep Subtype here
+  geom_point()  +
+  scale_colour_manual(values = specific_colours, 
+                      labels = abundance_for_fig %>% distinct(Subtype, Subtype_label) %>% deframe(),
+                      drop = FALSE,
+                      name = 'Pollen type') +
   guides(colour = guide_legend(ncol = 1)) +
-  theme(legend.position = "right")
+  theme(legend.position = "right",
+        legend.text = element_markdown())  # needed to render the italic HTML tags
 
 # extract legend 
 legend <- get_legend(dummy_plot)
@@ -560,12 +529,13 @@ legend <- get_legend(dummy_plot)
 # combine, add letters and legend
 abund_combined <- plot_grid(
   plot_grid(abund_fig_JAM, abund_fig_KB,
-            ncol = 2, labels = c("A", "B"),
+            ncol = 2, labels = c("a", "b"),
             label_fontface = "plain",  # not bold
-            label_x = -0.02),          # move letters slightly left 
+            label_x = -0.03, # move letters slightly left 
+            label_y = 1),          
   legend,
   ncol = 2,
-  rel_widths = c(1, 0.2)) # legend width
+  rel_widths = c(1, 0.4)) # legend width
 
 
 # make axes labels
@@ -574,7 +544,7 @@ abund_left_label <- ggplot() +
            x = 0.5, y = 0.5, # x is left or right, y is up and down
            label = 'Abundance',
            angle = 90,
-           size = 5) +
+           size = 4) +
   theme_void() +
   theme(
     panel.background  = element_rect(fill = 'white', colour = NA),
@@ -586,20 +556,114 @@ abund_bottom_label <- ggplot() +
            x = 0.5, y = 0.5, 
            label = 'Season',
            angle = 0,
-           size = 5) +
+           size = 4) +
   theme_void() +
   theme(
     panel.background  = element_rect(fill = 'white', colour = NA),
     plot.background   = element_rect(fill = 'white', colour = NA),
-    plot.margin       = margin(0, 0, 0, 0)
+    plot.margin       = margin(0, 110, 0, 10)
   )
 
 # combine them into a single plot object
 abund_combined <- cowplot::plot_grid(abund_left_label, abund_combined, ncol = 2, rel_widths = c(0.05, 0.95))
-abund_combined <- cowplot::plot_grid(abund_combined, abund_bottom_label, ncol = 1, rel_heights = c(1, 0.09))
+# abund_combined <- cowplot::plot_grid(abund_combined, abund_bottom_label, ncol = 1, rel_heights = c(1, 0.09))
 
 abund_combined
 
+ggsave('Figures/Abundance_fig.png', abund_combined, width = 8.4, height = 6, dpi = 300)
+
+
+```
+
+```{r Abudance_fig_2}
+
+legend_labels <- c(
+  "Amaryllidaceae" = "Amaryllidaceae",
+  "Asteraceae" = "Asteraceae",
+  "Cichorieae" = "Cichorieae (Asteraceae)",
+  "Brassicaceae" = "Brassicaceae",
+  "Corokia" = "<i>Corokia</i> (Argophyllaceae)",
+  "Leycesteria" = "<i>Leycesteria</i> (Caprifoliaceae)",
+  "Lysimachia" = "<i>Lysimachia</i> (Primulaceae)",
+  "Muehlenbeckia" = "<i>Muehlenbeckia</i> (Polygonaceae)",
+  "Plantago" = "<i>Plantago</i> (Plantaginaceae)",
+  "Pyracantha" = "<i>Pyracantha</i> (Rosaceae)",
+  "Ranunculus" = "<i>Ranunculus</i> (Ranunculaceae)",
+  "Rhododendron" = "<i>Rhododendron</i> (Ericaceae)",
+  "Rubus" = "<i>Rubus</i> (Rosaceae)",
+  "Solanum" = "<i>Solanum</i> (Solanaceae)",
+  "Veronica" = "<i>Veronica</i> (Plantaginaceae)",
+  "Viburnum" = "<i>Viburnum</i> (Adoxaceae)",
+  "Unknown_1" = "Type 1",
+  "Unknown_2" = "Type 2",
+  "Unknown_3" = "Type 3",
+  "Unknown_4" = "Type 4",
+  "Unknown_5" = "Type 5",
+  "Unknown_6" = "Type 6",
+  "Unknown_7" = "Type 7"
+)
+
+# 50 m plot for data not summed
+pollen_samples_abundance %>% 
+  ggplot(aes(x = Abundance_for50, y = Count_scaled, fill = Subtype)) +
+  geom_bar(stat = "identity") +
+  labs(y = "Total pollen grains", x = "Abundance") +
+  scale_y_continuous(breaks = seq(0, 14000, by = 2500)) +
+  scale_x_continuous(breaks = seq(0, 5, by = 1)) +
+  scale_colour_manual(values = specific_colours) + 
+  scale_fill_manual(
+    values = specific_colours,
+    labels = abundance_for_fig
+  ) +
+  theme(legend.text = ggtext::element_markdown())  
+
+  
+
+
+
+
+
+
+
+
+
+
+# 
+# # make a df to sum the number of pollen grains counted from each subtype and their abundance
+# abundance_and_count <- pollen_samples_abundance %>% 
+#   filter(Count_scaled != 0) %>% 
+#   select(Slide_code, Season, Family, Subtype, Abundance_for50, Abundance_for200, Count_scaled)
+# 
+# # 50 m data
+# abundance_and_count_50 <- abundance_and_count %>% 
+#   group_by(Abundance_for50) %>% 
+#   summarise(Sum_pollen_count = sum(Count_scaled))
+# 
+# # 200 m data
+# abundance_and_count_200 <- abundance_and_count %>% 
+#   group_by(Abundance_for200) %>% 
+#   summarise(Sum_pollen_count = sum(Count_scaled))
+#   
+# 
+# # 50 m plot
+# abundance_and_count_fig_50 <- abundance_and_count_50 %>% 
+#   ggplot(aes(x = Abundance_for50, y = Sum_pollen_count)) +
+#   geom_bar(stat = "identity", fill = "#b35b5b") +
+#   labs(y = 'Total pollen grains', x = 'Abundance') +
+#   scale_y_continuous(breaks = seq(0, 14000, by = 2500)) +
+#   scale_x_continuous(breaks = seq(0, 5, by = 1))
+#   
+# # 200 m plot
+# abundance_and_count_fig_200 <- abundance_and_count_200 %>% 
+#   ggplot(aes(x = Abundance_for200, y = Sum_pollen_count)) +
+#   geom_bar(stat = "identity", fill = "#b35b5b") +
+#   labs(y = 'Total pollen grains', x = 'Abundance') +
+#   scale_y_continuous(breaks = seq(0, 15000, by = 2500)) +
+#   scale_x_continuous(breaks = seq(0, 5, by = 1))
+# 
+# abundance_and_count_fig_50
+
+ggsave('Figures/Abundance_count_50_fig.png', abundance_and_count_fig_50, width = 6, height = 4, dpi = 300)
 
 
 ```
@@ -612,12 +676,12 @@ abund_combined
 n_df_KB <- pollen_samples %>%
   filter(Site == 'KB') %>% 
   group_by(Date_label) %>%
-  summarise(N_bees = length(unique(Slide_code))) 
+  summarise(N_bees = length(unique(Slide_code)))
 
 n_df_JAM <- pollen_samples %>%
   filter(Site == 'JAM') %>% 
   group_by(Date_label) %>%
-  summarise(N_bees = length(unique(Slide_code))) 
+  summarise(N_bees = length(unique(Slide_code)))  
 
 pollen_samples %>% 
   filter(Site == 'KB') %>% 
@@ -735,32 +799,106 @@ beehav_sum %>%
 
 ```
 
+```{r Richness_and_Sociality}
+
+
+## Richness for nests and individuals 
+
+# put solitary first
+pollen_beehav_nest <- pollen_beehav_nest %>% 
+  mutate(Social_status_at_time_con = factor(Social_status_at_time_con, 
+                              levels = c("solitary", "social")))
+pollen_beehav_ind <- pollen_beehav_ind %>% 
+    mutate(Social_status_at_time_con = factor(Social_status_at_time_con, 
+                              levels = c("solitary", "social")))
+
+# remove duplicates for individuals (kept all samples for the analyses) but graphing average for the fig
+pollen_beehav_ind <- pollen_beehav_ind %>%
+  group_by(Bee_ID) %>%
+  arrange(desc(Social_status_at_time_con == "social")) %>%
+  slice(1) %>%
+  ungroup()
+# Social_status_at_time_con actually becomes social EVER
+pollen_beehav_ind <- pollen_beehav_ind %>% rename(Social_status_ever_con = Social_status_at_time_con)
+  
+
+# richness per nest, compiled
+richness_fig_nest <- pollen_beehav_nest %>% 
+  ggplot(aes(x = Social_status_at_time_con, y = Richness_nest, fill = Social_status_at_time_con )) + 
+  geom_dotplot(binaxis='y', stackdir='center', color = NA, dotsize = 1) +
+  scale_fill_manual(values=c("#cc7a7a", "#994545")) +
+  labs(x = '\n Nest', y = NULL) + 
+  theme(legend.position = "none") +
+  scale_x_discrete(label = c('Solitary', 'Social')) +
+  ylim(0, 7)
+
+# richness per invidivual, average
+richness_fig_ind <- pollen_beehav_ind %>% 
+  ggplot(aes(x = Social_status_ever_con, y = Richness_ind_mean, fill = Social_status_ever_con )) + 
+  geom_dotplot(binaxis='y', stackdir='center', color = NA, dotsize = 1) +
+  scale_fill_manual(values=c("#cc7a7a", "#994545")) + # "#ed9c79" "#d96634"
+  labs(x = '\n Individual', y = NULL) + 
+  theme(legend.position = "none") +
+  scale_x_discrete(label = c('Solitary', 'Social')) +
+  ylim(0, 7)
+
+
+# combine, add letters and legend
+richness_combined <- plot_grid(
+  plot_grid(richness_fig_ind, richness_fig_nest,
+            ncol = 2, labels = c("a", "b"),
+            label_fontface = "plain",  # not bold
+            label_x = -0.03, # move letters slightly left 
+            label_y = 1))
+
+
+# make axes labels
+richness_left_label <- ggplot() +
+  annotate('text',
+           x = 0.5, y = 0.5, 
+           label = 'Pollen richness',
+           angle = 90,
+           size = 4) +
+  theme_void() +
+  theme(
+    panel.background  = element_rect(fill = 'white', colour = NA),
+    plot.background   = element_rect(fill = 'white', colour = NA),
+    plot.margin       = margin(0, 0, 0, 0)
+  )
+# richness_bottom_label <- ggplot() +
+#     annotate('text',
+#            x = 0.5, y = 0.5, 
+#            label = 'Social status',
+#            angle = 0,
+#            size = 4) +
+#   theme_void() +
+#   theme(
+#     panel.background  = element_rect(fill = 'white', colour = NA),
+#     plot.background   = element_rect(fill = 'white', colour = NA),
+#     plot.margin       = margin(0, 40, 0, 0)
+#   )
+
+# combine them into a single plot object
+richness_combined <- cowplot::plot_grid(richness_left_label, richness_combined, ncol = 2, rel_widths = c(0.05, 0.95))
+# richness_combined <- cowplot::plot_grid(richness_combined, richness_bottom_label, ncol = 1, rel_heights = c(1, 0.09))
+
+richness_combined
+
+ggsave('Figures/Richness_fig.png', richness_combined, width = 6, height = 4, dpi = 300)
+
+
+# sample size
+length(unique(pollen_beehav_ind$Bee_ID))
+length(unique(pollen_beehav_nest$Nest))
+
+```
+
 ```{r Pollen_and_Sociality_figures}
 
 # sample size for conservative
 pollen_beehav %>%
   group_by(Social_status_at_time_con) %>%
   summarise(n_samples = n_distinct(Slide_code))
-
-
-## Violin plots
-
-# richness per nest, compiled
-pollen_beehav_nest %>% 
-  ggplot(aes(x = Social_status_at_time_con, y = Richness_nest, fill = Social_status_at_time_con )) + 
-  geom_violin() + 
-  scale_fill_manual(values = c("#045b87", "#52c5ff")) +
-  labs(y = "Richness per nest", x = 'Sociality') +
-  theme(legend.position = "none")
-
-# richness per invidivual, average
-pollen_beehav_ind %>% 
-  ggplot(aes(x = Social_status_at_time_con, y = Richness_ind_mean, fill = Social_status_at_time_con )) + 
-  geom_violin() + 
-  scale_fill_manual(values = c("#045b87", "#52c5ff")) +
-  labs(y = "Average richness per individual", x = 'Sociality') +
-  theme(legend.position = "none")
-
 
 
 # all samples of social nests
@@ -780,19 +918,6 @@ pollen_beehav %>%
   facet_wrap(~ Bee_ID, scales = "free_x")
 
 
-pollen_beehav_ind %>%
-  filter(Social_status_at_time_con == 'solitary') %>% 
-  ggplot(aes(x = Date_pollen, y = Richness_ind, colour = Bee_ID)) +
-  geom_jitter(height = 0, width = 0, alpha = 0.7) + 
-  geom_line() +
-  theme(legend.position = 'none')
-
-pollen_beehav_ind %>%
-  filter(Social_status_at_time_con == 'social') %>% 
-  ggplot(aes(x = Date_pollen, y = Richness_ind, colour = Bee_ID)) +
-  geom_jitter(height = 0, width = 0, alpha = 0.7) + 
-  geom_line() +
-  theme(legend.position = 'none')
 
 
 ```

@@ -1006,7 +1006,6 @@ beehav <- beehav %>%
     Days_observed = as.numeric(Last_date - First_date) + 1
   )
 beehav <- beehav %>% select(-First_date, -Last_date)
-# manually added to the saved beehav data
 
 
 # compare nests with more than one female painted with beehav data
@@ -1019,7 +1018,7 @@ beehav_potentially_social <- beehav %>% filter(Nest == 'J11' | Nest == 'J18' | N
 # 18-Nov	W-WWG	  18	 never filmed after being marked, and was weeks after previous 2 bees
 # 25-Nov	G-OGP	  18	 OGP and WWG last seen Nov 25, No ID collects pollen Jan 16
 # 16-Jan	P-PPG	  18	    -> P-PPG could have continued nest or reused nest, but wouldn't be for the first batch of brood
-# 06-Nov	OBO-P	  26	 No ID (POB) filmed after OBO-P 6 weeks later then another NO ID 2 weeks later
+# 06-Nov	OBO-P	  26	 No ID (POB) filmed after OBO-P 6 weeks later then another No ID 2 weeks later
 # 06-Jan	P-POB	  26	    -> P-POB could have continued nest or reused nest, but wouldn't be for the first batch of brood
 # 06-Jan	O-WOW	  51	 only Y-PPY filmed
 # 06-Jan	Y-PPY	  51	    -> could be social 
@@ -1048,6 +1047,8 @@ beehav_potentially_social <- beehav %>% filter(Nest == 'J11' | Nest == 'J18' | N
 
 
 ## Only change J51, J56 and J75 to potentially social (after next step)
+
+
 
 
 ## Nest-level data unique date-nest combo
@@ -1112,7 +1113,7 @@ beehav_sum %>%
 
 
 length(unique(beehav_sum$Nest)) # 52 nests observed, includes with 0 females performing tasks that day
-table(beehav_sum$Social_status_con) # 5 social, 46 solitary
+table(beehav_sum$Social_status_con) # 5 social, 47 solitary
 
 # # how many marked bees did we observe?
 # # first remove unknowns
@@ -1705,37 +1706,59 @@ pollen_beehav_nest <- pollen_beehav_nest %>%
 
 ```
 
-```{r}
-
-
-
-
-
-
-
-```
-
 ```{r Descriptive_and_Saving}
 
 
 ## Descriptive
-
-# how long were bees obvsered for
+# how long were bees observed for
 beehav_filt <- beehav %>% 
   filter(!grepl('Male', Bee_ID) & !grepl('No ID', Bee_ID) & !grepl('Unknown', Bee_ID)) %>% 
   distinct(Bee_ID, .keep_all = TRUE)
 # max is 62 days, min is 1
 
+
+
+hist(beehav_filt$Days_observed)
+
 mean(beehav_filt$Days_observed) # mean = 8.23
 sd(beehav_filt$Days_observed) # SD = 13.39
+# for 95% CI
+n <- length(beehav_filt$Days_observed)
+mean_days <- mean(beehav_filt$Days_observed)
+sd_days <- sd(beehav_filt$Days_observed)
+se <- sd_days / sqrt(n)
+CI <- mean_days + c(-1, 1) * qt(0.975, n - 1) * se
+CI # CI = 3.89, 12.57
 
 
-## Create daye of season
+
+# make plot
+
+library(ggplot2)
+
+fig_days_observed <- beehav_filt %>% 
+  ggplot(aes(x = Days_observed)) +
+  geom_histogram() +
+  labs(x = 'Span of observations (days)', y = 'Number of individuals')
+  
+# save
+ggsave('Figures/Day_observed_fig.png', fig_days_observed, width = 6, height = 3.5, dpi = 300)
+
+
+## Create day of season
 season_start <- as.Date("2024-11-07") # first day of collected pollen
 pollen <- pollen %>%
   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
 pollen_samples_abundance <- pollen_samples_abundance %>%
   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
+
+
+## How were tasks allocated within social nests?
+beehav_nest_sum <- beehav %>% 
+  filter(Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92' | Nest == 'J100') %>%
+  filter(!grepl('No ID', Bee_ID)) %>% 
+  filter(!grepl('Unknown', Bee_ID))
+
 
 
 ## Saving wrangled data
@@ -1763,6 +1786,9 @@ write.csv(pollen_samples_abundance, 'Data/Pollen_and_Surveys/Pollen_samples_abun
 
 # abundance for figure
 write.csv(abundance_for_fig, 'Data/Pollen_and_Surveys/Abundance_50m_for_figure_cleaned.csv')
+
+# save full beehav df
+write.csv(beehav, 'Data/Behaviour/Behaviour_nest_extensive_cleaned.csv')
 
 
 ```
