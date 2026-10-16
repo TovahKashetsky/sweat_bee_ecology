@@ -619,6 +619,13 @@ pollen_beehav_nests <- pollen_beehav %>%
   distinct(Nest, .keep_all = TRUE)
 # keep columns that make sense
 pollen_beehav_nests <- pollen_beehav_nests %>% select(Nest, Site, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_nest)
+# how many samples per nest?
+num_samples_nest <- pollen_beehav %>% 
+  group_by(Nest) %>% 
+  summarise(N_samples = length(unique(Slide_code)))
+# join together
+pollen_beehav_nests <- left_join(pollen_beehav_nests, num_samples_nest)
+
 
 # remove duplicates of slide codes 
 pollen_beehav_ind <- pollen_beehav %>% 
@@ -626,16 +633,29 @@ pollen_beehav_ind <- pollen_beehav %>%
   distinct(Slide_code, .keep_all = TRUE)
 # keep columns that make sense
 pollen_beehav_ind <- pollen_beehav_ind %>% select(Nest, Site, Bee_ID, Slide_code, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_ind)
+# how many samples per individual?
+num_samples_ind <- pollen_beehav %>% 
+  group_by(Bee_ID) %>% 
+  summarise(N_samples = length(unique(Slide_code)))
+# join together
+pollen_beehav_ind <- left_join(pollen_beehav_ind, num_samples_ind)
 
 
 # GLMM
 
 # nest-level
-mod_richness_nest <- lm(Richness_nest ~ Social_status_ever_con + Site, data = pollen_beehav_nests)
+mod_richness_nest <- lm(Richness_nest ~ Social_status_ever_con + Site + N_samples, data = pollen_beehav_nests)
 
 check_model(mod_richness_nest) # good
 plot(simulateResiduals(mod_richness_nest))
 summary(mod_richness_nest) # not significant
+
+
+# mod_richness_nest_samples_included <- lm(Richness_nest ~ Social_status_ever_con + Site + N_samples, data = pollen_beehav_nests)
+
+# check_model(mod_richness_nest_samples_included) 
+# plot(simulateResiduals(mod_richness_nest_samples_included))
+# summary(mod_richness_nest_samples_included) 
 
 
 # individual-level
@@ -646,6 +666,11 @@ plot(simulateResiduals(mod_richness_ind))
 summary(mod_richness_ind) # not significant, no diff with individual ID
 
 
+# mod_richness_ind_samples_included <- glmer(Richness_ind ~ Social_status_at_time_con + Site + N_samples +  (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
+# 
+# check_model(mod_richness_ind_samples_included) # great!
+# plot(simulateResiduals(mod_richness_ind_samples_included))
+# summary(mod_richness_ind_samples_included)
 
 
 ```
