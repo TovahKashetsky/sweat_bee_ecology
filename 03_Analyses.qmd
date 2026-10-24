@@ -542,6 +542,20 @@ testOutliers(mod_abun_50) # no sig outliers
 summary(mod_abun_50)
 
 
+# try pollen subtype nest in family 
+mod_abun_50_f <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for50 + Day_of_season + Site + (1 | Family/Subtype) + (1 | Num_ID),
+        family = betabinomial(link = "logit"),
+        data = pollen_samples_abundance)
+check_model(mod_abun_50_f) # error
+plot(simulateResiduals(mod_abun_50_f)) # minor issue
+testDispersion(mod_abun_50_f) # no overdispersion
+testZeroInflation(mod_abun_50_f) # no zero inflation
+testOutliers(mod_abun_50_f) # no sig outliers
+# so trust the summary
+summary(mod_abun_50_f)
+
+
+
 # 200 m radius
 mod_abun_200 <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for200 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID),
         family = betabinomial(link = "logit"),
@@ -555,6 +569,19 @@ testOutliers(mod_abun_200) # no outliers
 # trust summary
 summary(mod_abun_200)
 
+
+# try pollen subtype nest in family 
+mod_abun_200_f <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for200 + Day_of_season + Site + (1 | Family/Subtype) + (1 | Num_ID),
+        family = betabinomial(link = "logit"),
+        data = pollen_samples_abundance)
+
+check_model(mod_abun_200_f) # great
+plot(simulateResiduals(mod_abun_200_f)) # minor issues again
+testDispersion(mod_abun_200_f) # no overdispersion
+testZeroInflation(mod_abun_200_f) # no zero inflation
+testOutliers(mod_abun_200_f) # no outliers
+# trust summary
+summary(mod_abun_200_f)
 
 # which model fits better?
 AIC(mod_abun_50) # 2055.583 

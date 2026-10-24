@@ -10,6 +10,7 @@ library(tidyverse)
 library(ggplot2)
 library(ggtext) # making genera names italic with element_markdown()
 library(cowplot) # to put together panels
+library(patchwork) # to put together panels
 
 
 # pollen data
@@ -57,7 +58,7 @@ pollen_samples <- pollen_samples %>%
 level_order <- pollen_samples %>%
   distinct(Site, Num_ID, Date_pollen) %>%
   slice_min(Date_pollen, by = Num_ID) %>%
-  arrange(Site == "KB", Date_pollen) %>%  # FALSE sorts before TRUE, so non-KB first
+  arrange(Site == 'KB', Date_pollen) %>%  # FALSE sorts before TRUE, so non-KB first
   pull(Num_ID)
 
 pollen_samples <- pollen_samples %>%
@@ -131,34 +132,34 @@ pollen_samples %>%
 
 
 specific_colours <- c(
-  "Amaryllidaceae" = '#a34676', 
-  "Asteraceae" = '#EA866C', # Asteraceae
-  "Cichorieae" = '#E9BA31', # Asteraceae
-  "Brassicaceae" = '#5682f0',
-  "Caryophyllaceae" = '#449450',   ## RARE
-  "Corokia" = '#96e0d8',           ## RARE
-  "Iridaceae" = '#e199f7',         ## RARE
-  "Leycesteria" = '#EB5D5A',       ## RARE
-  "Lysimachia" = '#86BCB6',
-  "Muehlenbeckia" = '#a6bfff',
-  "Myrtaceae" = '#c0f0fa',
-  "Plantago" = '#9ec716', # Plantaginaceae
-  "Veronica" = '#d4e892', # Plantaginaceae ## RARE
-  "Poaceae" = '#cf9b57',            ## RARE
-  "Ranunculus" = '#f7e211',
-  "Rhododendron" = '#6F8FAF',       ## RARE
-  "Rosaceae" = '#f24180',   # Rosaceae
-  "Pyracantha" = '#f57fa9', # Rosaceae
-  "Rubus" = '#ffccde',      # Rosaceae
-  "Solanum" = '#cacad9',           ## RARE 
-  "Viburnum" = '#cbe4f5',
-  "Unknown_1" = '#FFE7D1',
-  "Unknown_2" = '#FBAF7A', 
-  "Unknown_3" = '#F78334',
-  "Unknown_4" = '#B96478',
-  "Unknown_5" = '#8449B3',
-  "Unknown_6" = '#B284D7', 
-  "Unknown_7" = '#EDD9FC'
+  'Amaryllidaceae' = '#a34676', 
+  'Asteraceae' = '#EA866C', # Asteraceae
+  'Cichorieae' = '#E9BA31', # Asteraceae
+  'Brassicaceae' = '#5682f0',
+  'Caryophyllaceae' = '#449450',   ## RARE
+  'Corokia' = '#96e0d8',           ## RARE
+  'Iridaceae' = '#e199f7',         ## RARE
+  'Leycesteria' = '#EB5D5A',       ## RARE
+  'Lysimachia' = '#86BCB6',
+  'Muehlenbeckia' = '#a6bfff',
+  'Myrtaceae' = '#c0f0fa',
+  'Plantago' = '#9ec716', # Plantaginaceae
+  'Veronica' = '#d4e892', # Plantaginaceae ## RARE
+  'Poaceae' = '#cf9b57',            ## RARE
+  'Ranunculus' = '#f7e211',
+  'Rhododendron' = '#6F8FAF',       ## RARE
+  'Rosaceae' = '#f24180',   # Rosaceae
+  'Pyracantha' = '#f57fa9', # Rosaceae
+  'Rubus' = '#ffccde',      # Rosaceae
+  'Solanum' = '#cacad9',           ## RARE 
+  'Viburnum' = '#cbe4f5',
+  'Unknown_1' = '#FFE7D1',
+  'Unknown_2' = '#FBAF7A', 
+  'Unknown_3' = '#F78334',
+  'Unknown_4' = '#B96478',
+  'Unknown_5' = '#8449B3',
+  'Unknown_6' = '#B284D7', 
+  'Unknown_7' = '#EDD9FC'
   )
 
 
@@ -166,19 +167,19 @@ specific_colours <- c(
 
 pollen_samples <- pollen_samples %>% 
   mutate(Subtype_label = case_when(
-    Subtype == "Ranunculus" ~ "<i>Ranunculus</i> (Ranunculaceae)",
-    Subtype == "Rubus" ~ "<i>Rubus</i> (Rosaceae)",
-    Subtype == "Veronica" ~ "<i>Veronica</i> (Plantaginaceae)",
-    Subtype == "Cichorieae" ~ "Cichorieae (Asteraceae)",
-    Subtype == "Corokia" ~ "<i>Corokia</i> (Argophyllaceae)",
-    Subtype == "Leycesteria" ~ "<i>Leycesteria</i> (Caprifoliaceae)",
-    Subtype == "Lysimachia" ~ "<i>Lysimachia</i> (Primulaceae)",
-    Subtype == "Muehlenbeckia" ~ "<i>Muehlenbeckia</i> (Polygonaceae)",    
-    Subtype == "Plantago" ~ "<i>Plantago</i> (Plantaginaceae)",
-    Subtype == "Pyracantha" ~ "<i>Pyracantha</i> (Rosaceae)",
-    Subtype == "Rhododendron" ~ "<i>Rhododendron</i> (Ericaceae)",
-    Subtype == "Solanum" ~ "<i>Solanum</i> (Solanaceae)",    
-    Subtype == "Viburnum" ~ "<i>Viburnum</i> (Adoxaceae)",
+    Subtype == 'Ranunculus' ~ '<i>Ranunculus</i> (Ranunculaceae)',
+    Subtype == 'Rubus' ~ '<i>Rubus</i> (Rosaceae)',
+    Subtype == 'Veronica' ~ '<i>Veronica</i> (Plantaginaceae)',
+    Subtype == 'Cichorieae' ~ 'Cichorieae (Asteraceae)',
+    Subtype == 'Corokia' ~ '<i>Corokia</i> (Argophyllaceae)',
+    Subtype == 'Leycesteria' ~ '<i>Leycesteria</i> (Caprifoliaceae)',
+    Subtype == 'Lysimachia' ~ '<i>Lysimachia</i> (Primulaceae)',
+    Subtype == 'Muehlenbeckia' ~ '<i>Muehlenbeckia</i> (Polygonaceae)',    
+    Subtype == 'Plantago' ~ '<i>Plantago</i> (Plantaginaceae)',
+    Subtype == 'Pyracantha' ~ '<i>Pyracantha</i> (Rosaceae)',
+    Subtype == 'Rhododendron' ~ '<i>Rhododendron</i> (Ericaceae)',
+    Subtype == 'Solanum' ~ '<i>Solanum</i> (Solanaceae)',    
+    Subtype == 'Viburnum' ~ '<i>Viburnum</i> (Adoxaceae)',
     Subtype == 'Unknown_1' ~ 'Type 1',
     Subtype == 'Unknown_2' ~ 'Type 2',
     Subtype == 'Unknown_3' ~ 'Type 3',
@@ -483,7 +484,7 @@ samples_legend_conf <- pollen_samples %>%
       panel.background = element_blank(),
       plot.background = element_blank()
   ) +
-  guides(fill = guide_legend(ncol = 8))
+  guides(fill = guide_legend(ncol = 4))
 
 
 samples_legend_conf
@@ -498,31 +499,94 @@ ggsave('Figures/Pollen_legend_conference.png', samples_legend_conf, width = 19, 
 
 ## Make a figure divided by social, solitary, and unknown social phenotypes 
 
+# change J and K for A and B
+pollen_beehav <- pollen_beehav %>%
+  mutate(Nest = sub("^J", "A", Nest),
+         Nest = sub("^K", "B", Nest))
 
-# add social status to pollen_samples, and make it 'unknown' if never recorded, and add Nest column too
-pollen_samples <- pollen_samples %>%
-  left_join(distinct(pollen_beehav, Slide_code, Subtype, Social_status_at_time_con),
-            by = c("Slide_code", "Subtype")) %>%
-  mutate(Social_status_at_time_con = coalesce(as.character(Social_status_at_time_con), "unknown"))
+# add social status and nest to unknown social status bees
+columns_needed <- pollen_beehav %>% select(Nest, Slide_code, Subtype, Social_status_at_time_con)
+pollen_samples <- left_join(pollen_samples, columns_needed)
+
+
+# make nest A or B for unknown bees
+pollen_samples <- pollen_samples %>% mutate(Nest = ifelse(is.na(Nest) & Site == 'JAM', 'A',
+                                                          ifelse(is.na(Nest) & Site == 'KB', 'B', Nest)))
+
+# make social status unknown 
+pollen_samples <- pollen_samples %>% mutate(Social_status_at_time_con = ifelse(is.na(Social_status_at_time_con), 'unknown', Social_status_at_time_con))
+
 
 # change number ID drop the site
 pollen_samples <- pollen_samples %>% mutate(Num_ID_number = str_extract(Num_ID, "(?<=\\.)\\d+"))
 
-# add column for Nest (to be the site)
-pollen_samples <- pollen_samples %>% mutate(Nest = ifelse(Site == 'JAM', 'A',
-                                                          ifelse(Site == 'KB', 'B', NA)))
-
 pollen_samples <- pollen_samples %>%
-  mutate(strip_label = paste0("**", Nest, "**: ", Num_ID_number))
+   mutate(strip_label = paste0("**", Nest, "**: ", Num_ID_number))
+
+# make custom order of samples because ordering by date doesnt work
+bee_order_social <- c("15", "66", "67", "71", "70", "72", "77")
+bee_order_solitary <- c("31", "21", "38", "82", "42", "47", "57", "46", "54", "13", "52", "63", "60", "66", "25", "67", "77", "40", "70", "7", "10")
+bee_order_unknown <- c("32", "36", "2", "34", "51", "9", "43", "45", "62", "56", "49", "17", "64", "22", "85", "73", "74", "4", "6", "14", "8", "18", "15", "20", "26")
+
+# divide the df by social phenotype
+pollen_samples_social <- pollen_samples %>%
+  filter(Social_status_at_time_con == 'social') 
+pollen_samples_solitary <- pollen_samples %>%
+  filter(Social_status_at_time_con == 'solitary') 
+pollen_samples_unknown <- pollen_samples %>%
+  filter(Social_status_at_time_con == 'unknown') 
+
+
+panel_order <- pollen_samples_social %>%
+  distinct(Num_ID_number, Nest) %>%
+  mutate(
+    Num_ID_number = as.character(Num_ID_number),
+    custom_order = match(Num_ID_number, bee_order_social),
+    strip_label = paste0("**", Nest, "**: ", Num_ID_number)
+  ) %>%
+  arrange(custom_order)
+pollen_samples_social <- pollen_samples_social %>%
+  mutate(
+    strip_label = factor(
+      strip_label,
+      levels = panel_order$strip_label))
+
+panel_order <- pollen_samples_solitary %>%
+  distinct(Num_ID_number, Nest) %>%
+  mutate(
+    Num_ID_number = as.character(Num_ID_number),
+    custom_order = match(Num_ID_number, bee_order_solitary),
+    strip_label = paste0("**", Nest, "**: ", Num_ID_number)
+  ) %>%
+  arrange(custom_order)
+pollen_samples_solitary <- pollen_samples_solitary %>%
+  mutate(
+    strip_label = factor(
+      strip_label,
+      levels = panel_order$strip_label))
+
+panel_order <- pollen_samples_unknown %>%
+  distinct(Num_ID_number, Nest) %>%
+  mutate(
+    Num_ID_number = as.character(Num_ID_number),
+    custom_order = match(Num_ID_number, bee_order_unknown),
+    strip_label = paste0("**", Nest, "**: ", Num_ID_number)
+  ) %>%
+  arrange(custom_order)
+pollen_samples_unknown <- pollen_samples_unknown %>%
+  mutate(
+    strip_label = factor(
+      strip_label,
+      levels = panel_order$strip_label))
 
 
 # plot bees with no social data
-samples_fig_no_social_data <- pollen_samples %>%
+samples_fig_no_social_data <- pollen_samples_unknown %>%
   filter(Social_status_at_time_con == 'unknown') %>%  
   arrange(Num_ID_number, Date_pollen) %>%
   ggplot(aes(x = Slide_code, y = Count_scaled, fill = Subtype)) +
   geom_col(position = "fill", width = 0.8) + 
-  labs(x = "Date", y = NULL) + 
+  labs(x = NULL, y = NULL) + 
   facet_wrap(~ strip_label, scales = "free_x", ncol = 7) +
   scale_x_discrete(labels = function(x) {
     pollen_samples$Date_label[match(x, pollen_samples$Slide_code)]
@@ -533,15 +597,14 @@ samples_fig_no_social_data <- pollen_samples %>%
   name = "Pollen type"
   ) + 
   theme(
-      axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 8, colour = "grey20"),
-      axis.text.y = element_text(size = 18, colour = "grey20"),
+      axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 9, colour = "grey20"),
+      axis.text.y = element_text(size = 11, colour = "grey20"),
       strip.background = element_blank(),
-      strip.text = element_markdown(size = 11, colour = "grey60", hjust = 0),  
+      strip.text = element_markdown(size = 9, colour = "grey60", hjust = 0),  
       axis.ticks = element_line(linewidth = 0.35, colour = "grey20"),
       legend.position = "none",
       axis.line.y = element_line(linewidth = 0.35, colour = "grey20"),
       axis.line.x = element_line(linewidth = 0.35, colour = "grey20"),
-      axis.title.x = element_text(size = 26, vjust = -0.5),
       panel.background = element_blank(),
       plot.background = element_blank()
   ) +
@@ -552,18 +615,11 @@ samples_fig_no_social_data
 
 
 # plot social individuals 
-samples_fig_social <- pollen_samples %>%
-  filter(Social_status_at_time_con == 'social') %>%  
-  arrange(Num_ID_number, Date_pollen) %>%
+samples_fig_social <- pollen_samples_social %>%
   ggplot(aes(x = Slide_code, y = Count_scaled, fill = Subtype)) +
   geom_col(position = "fill", width = 0.8) + 
-  labs(x = "Date", y = "Proportion of pollen sample")  +
-  facet_wrap(
-    ~ Num_ID_number, 
-    scales = "free_x", 
-    ncol = 7,
-    labeller = as_labeller(function(id) paste0("**", nest_lookup[id], "**: ", id))
-  ) +
+  labs(x = NULL, y = NULL)  +
+    facet_wrap(~ strip_label, scales = "free_x", ncol = 7) +
   scale_x_discrete(labels = function(x) {
     pollen_samples$Date_label[match(x, pollen_samples$Slide_code)]
   }) +
@@ -573,15 +629,14 @@ samples_fig_social <- pollen_samples %>%
   name = "Pollen type"
   ) + 
   theme(
-      axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 8, colour = "grey20"),
-      axis.text.y = element_text(size = 18, colour = "grey20"),
+      axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 9, colour = "grey20"),
+      axis.text.y = element_text(size = 11, colour = "grey20"),
       strip.background = element_blank(),
-      strip.text = element_markdown(size = 11, colour = "grey60", hjust = 0),  
+      strip.text = element_markdown(size = 9, colour = "grey60", hjust = 0),  
       axis.ticks = element_line(linewidth = 0.35, colour = "grey20"),
       legend.position = "none",
       axis.line.y = element_line(linewidth = 0.35, colour = "grey20"),
       axis.line.x = element_line(linewidth = 0.35, colour = "grey20"),
-      axis.title.x = element_text(size = 26, vjust = -0.5),
       panel.background = element_blank(),
       plot.background = element_blank()
   ) +
@@ -593,18 +648,13 @@ samples_fig_social
 
 
 # plot solitary bees
-samples_fig_solitary <- pollen_samples %>%
+samples_fig_solitary <- pollen_samples_solitary %>%
   filter(Social_status_at_time_con == 'solitary') %>%  
   arrange(Num_ID_number, Date_pollen) %>%
   ggplot(aes(x = Slide_code, y = Count_scaled, fill = Subtype)) +
   geom_col(position = "fill", width = 0.8) + 
   labs(x = NULL, y = NULL) + 
-  facet_wrap(
-    ~ Num_ID_number, 
-    scales = "free_x", 
-    ncol = 7,
-    labeller = as_labeller(function(id) paste0("**", nest_lookup[id], "**: ", id))
-  ) +
+    facet_wrap(~ strip_label, scales = "free_x", ncol = 7) +
   scale_x_discrete(labels = function(x) {
     pollen_samples$Date_label[match(x, pollen_samples$Slide_code)]
   }) +
@@ -614,31 +664,103 @@ samples_fig_solitary <- pollen_samples %>%
   name = "Pollen type"
   ) + 
   theme(
-      axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 8, colour = "grey20"),
-      axis.text.y = element_text(size = 18, colour = "grey20"),
+      axis.text.x = element_text(angle = 45, vjust = 0.95, hjust = 1, size = 9, colour = "grey20"),
+      axis.text.y = element_text(size = 11, colour = "grey20"),
       strip.background = element_blank(),
-      strip.text = element_markdown(size = 11, colour = "grey60", hjust = 0),  
+      strip.text = element_markdown(size = 9, colour = "grey60", hjust = 0),  
       axis.ticks = element_line(linewidth = 0.35, colour = "grey20"),
       legend.position = "none",
       axis.line.y = element_line(linewidth = 0.35, colour = "grey20"),
       axis.line.x = element_line(linewidth = 0.35, colour = "grey20"),
-      axis.title.x = element_text(size = 26, vjust = -0.5),
       panel.background = element_blank(),
       plot.background = element_blank()
   ) +
   scale_y_continuous(breaks = c(0, 0.5, 1)) +
   guides(fill = guide_legend(ncol = 1))
 
-
 samples_fig_solitary
 
 
-# combine together and add a side label 
+
+## Combine plots
+
+combined_pollen <- samples_fig_social / samples_fig_solitary / samples_fig_no_social_data +
+  plot_layout(heights = c(0.64, 3.5, 5))
+
+Pollen_left_label <- ggplot() +
+  annotate('text',
+           x = 0.5, y = 0.5,
+           label = 'Proportion of pollen sample',
+           angle = 90,
+           size = 7) +
+  theme_void() +
+  theme(
+    panel.background  = element_rect(fill = 'white', colour = NA),
+    plot.background   = element_rect(fill = 'white', colour = NA),
+    plot.margin       = margin(0, 0, 0, 0)
+  ) 
+
+Pollen_bottom_label <- ggplot() +
+    annotate('text',
+           x = 0.5, y = 0.5,
+           label = 'Date',
+           angle = 0,
+           size = 7) +
+  theme_void() +
+  theme(
+    panel.background  = element_rect(fill = 'white', colour = NA),
+    plot.background   = element_rect(fill = 'white', colour = NA),
+    plot.margin       = margin(0, 0, 0, 0)
+  )
+  
+# add left and bottom labels
+Pollen_combined <- cowplot::plot_grid(Pollen_left_label, combined_pollen, ncol = 2, rel_widths = c(0.05, 0.95)) 
+Pollen_combined <- cowplot::plot_grid(Pollen_combined, Pollen_bottom_label, ncol = 1, rel_heights = c(1, 0.09))
+
+# save
+ggsave('Figures/Pollen_combined.png', Pollen_combined, width = 7, height = 12, dpi = 300, bg = "white") 
+
+
+# make legend
+
+samples_legend_combined <- pollen_samples %>%
+  ggplot(aes(x = Slide_code, y = Count_scaled, fill = Subtype)) +
+  geom_col(position = "fill", width = 0.8) +
+  scale_fill_manual(
+  values = specific_colours_conf,
+  labels = pollen_samples %>% distinct(Subtype, Subtype_label_conf) %>% deframe(),
+  name = "Pollen type" # legend title
+  ) + 
+  theme(
+      legend.text = element_markdown(size = 13), 
+      legend.title = element_text(size = 17),
+      legend.background = element_rect(fill = "transparent", colour = NA),
+      legend.box.background = element_rect(fill = "transparent", colour = NA),
+      legend.key = element_rect(fill = "transparent", colour = NA),
+      panel.background = element_blank(),
+      plot.background = element_blank()
+  ) +
+  guides(fill = guide_legend(ncol = 1))
+
+samples_legend_combined
+
+ggsave('Figures/Pollen_combined_legend.png', samples_legend_combined, width = 5, height = 11, dpi = 300)
 
 
 
 
 
+
+pollen_samples %>%
+  group_by(Num_ID_number) %>%
+  summarise(
+    n_statuses = n_distinct(Social_status_at_time_con),
+    statuses   = paste(sort(unique(Social_status_at_time_con)), collapse = ", ")
+  ) %>%
+  filter(n_statuses > 1)
+
+# which bees has both soical and solitary status
+# 66, 67, 70, 77
 
 ```
 
