@@ -272,8 +272,6 @@ JAM_200_late <- select(JAM_200_late, -Abundance)
 KB_200_late <- select(KB_200_late, -Abundance)
 
 
-
-
 # ### Abundance matrix
 # 
 # ## make abundance at family-level
@@ -471,8 +469,6 @@ KB_200_late <- select(KB_200_late, -Abundance)
 #   ungroup()
 
 
-
-
 ```
 
 ```{r Bee_pollen_samples}
@@ -568,7 +564,7 @@ pollen$Family <- str_replace_all(pollen$Family, " ", "_")
 ```{r Compile_plant_taxa}
 
 
-## Compile subtypes into families for pollen types NOT collected by bees. If collected, keep as subtype
+## Compile subtypes into families for pollen types not collected by bees. If collected by bees, keep as subtype
 
 # take just subtypes and family
 types_collected <- pollen %>% select(Family, Subtype, Site, Date_pollen)
@@ -954,6 +950,13 @@ length(subtypes_KB_200_late$Site) # 5
 length(subtypes_com_fam_KB_200_late$Site) # 20
 # any duplicates at subtype level? should be 0
 subtypes_com_fam_KB_200_late[duplicated(subtypes_com_fam_KB_200_late$Subtype),]
+
+
+
+
+```
+
+```{r}
 
 
 
@@ -1357,13 +1360,13 @@ pollen <- pollen %>% filter(Num_ID != 'J.83')
 ```{r Add_taxa_into_surveys_if_bees_collected_outside_of_radius}
 
 
-## Before matching with samples, are any types in the pollen samples not in the floral surveyss?
+## Before matching with samples, are any types in the pollen samples not in the floral surveys?
 
 # make Season column in pollen data
 pollen <- pollen %>% 
   mutate(Season = ifelse(format(Date_pollen, "%Y") == "2024", "early/mid", "late"))
 
-# remove NAs from the unknown pollen types no abundance data for unknowns)
+# remove NAs from the unknown pollen types - no abundance data
 pollen_samples_known <- pollen %>% filter(!grepl('Unknown', Subtype))
 length(pollen$Site) # 147
 length(pollen_samples_known$Site) # 132
@@ -1449,7 +1452,7 @@ subtypes_com_fam_KB_200_late <- subtypes_com_fam_KB_200_late %>% add_row(Site = 
 ```{r Match_abundance_with_samples}
 
 
-## Match abundance with pollen samples 
+## Match abundance with pollen samples (first, which include subtypes collected by bees)
 
 # compile pollen samples and abundance data
 pollen_samples_all <- bind_rows(pollen_samples_JAM_early, pollen_samples_JAM_late, pollen_samples_KB_early, pollen_samples_KB_late)
@@ -1521,7 +1524,7 @@ pollen_samples_abundance <- full_join(samples_and_abund_50, samples_and_abund_20
 # keep the taxa NA for abundance when it appears in the 200 but not 50 m radius
 
 
-## Remove the extra taxa input for bees that captured pollen outside of the abudnance ranges
+## Remove the extra taxa input for bees that captured pollen outside of the abundance ranges
 # types where both abundance and pollen count = 0, replace abundance 50 with NA for JAM and remove the Rhododendron rows for KB
 # this is because one bee has pollen collected from something beyond the 200m range, but don't keep it in for all bees
 # it's all Iridaceae, Pyracantha, Amaryllidaceae, and Rhododendron
@@ -1534,6 +1537,79 @@ pollen_samples_abundance <- full_join(samples_and_abund_50, samples_and_abund_20
 # pollen_samples_abundance <- pollen_samples_abundance %>% filter(Count_scaled != 0 | Abundance_for50 != 0 | Abundance_for200 != 0 | Site != 'KB')
 
 
+
+
+## Match abundance with pollen samples (second, combined subtypes into family for supplementary analyses)
+# 
+# ## 50 m ##
+# 
+# abundance_fam_50m <- bind_rows(comp_all_fam_JAM_50_early, comp_all_fam_JAM_50_late, comp_all_fam_KB_50_early, comp_all_fam_KB_50_late)
+# 
+# # is it identical to the df with families only compiled if subtypes were not collected by bees?
+# length(unique(abundance_fam_50m$Family)) # 31
+# length(unique(abundance_50m$Family)) # 34
+# # the difference is coming from when the abundance is 0
+# absent_from_50 <- abundance_50m %>% 
+#   filter(Abundance_for50 == 0)
+# # has 4 because rose has multiple subtypes, and only one subtype is outside of the 50 m radius 
+# # add those to the df
+# absent_from_50 <- absent_from_50 %>% select(-Subtype)
+# absent_from_50 <- absent_from_50 %>% rename(Abundance_for50_comp_all = Abundance_for50)
+# abundance_fam_50m <- rbind(absent_from_50, abundance_fam_50m)
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# 
+# # take bee pollen sample descriptors
+# # sample_desc <- pollen_samples_all %>%
+# #   distinct(Num_ID, Slide_code, Site, Date_pollen, Season)
+# 
+# # left join so every bee sample gets a row for every taxon in abundance by site and season (to match survey)
+# samples_and_abund_fam_50 <- sample_desc %>%
+#   left_join(abundance_fam_50m, by = c("Site", "Season")) 
+# 
+# # left-join pollen counts in
+# samples_and_abund_fam_50 <- samples_and_abund_fam_50 %>%
+#   left_join(
+#     pollen_samples_all %>% select(Num_ID, Slide_code, Family, Count_scaled),
+#     by = c("Num_ID", "Slide_code", 'Family')
+#   ) %>%
+#   mutate(Count_scaled = replace_na(Count_scaled, 0)) # add 0 for taxa not in pollen sample
+# 
+# # let's inspect!
+# # should have identical numbers per slide code for each of the 4 surveys 
+# samples_and_abund_fam_50 %>% 
+#   group_by(Season, Site, Slide_code) %>% 
+#   summarise(length = length(Slide_code))
+# ### something is off
+# 
+# 
+# 
+# 
+# # these should match
+# sum(samples_and_abund_fam_50$Count_scaled)
+# sum(pollen_samples_all$Count_scaled)
+# 
+# 
+# x <- unique(samples_and_abund_fam_50$Family)
+# y <- unique(samples_and_abund_50$Family)
+# setdiff(y, x)
+
+
+
+
+
+
+
+
+
+
 ## for abundance figure 
 abundance_for_fig <- abundance_50m %>% 
   filter(Subtype %in% types_collected$Subtype)
@@ -1544,8 +1620,88 @@ abundance_for_fig_not_collected <- abundance_50m %>%
 
 ```
 
-```{r Abundance_for_plants_not_collected}
+```         
+```
 
+```{r Compile_pollen_to_family}
+
+
+## Compile the subtypes at the family level for supplementary analyses
+# doing it by deconstructing the end product with the df divided by subtypes because it saves many steps, e.g., adding in taxa that were outside of the survey radius
+
+
+# first, get just abundance data
+comp_family <- pollen_samples_abundance %>% select(Site, Season, Family, Subtype, Abundance_for50, Abundance_for200)
+# delete suplicates
+comp_family <- distinct(comp_family)
+
+
+# compile for 50 m
+comp_family <- comp_family %>%
+  group_by(Family, Site, Season) %>%
+  mutate(
+    max_abundance = if (all(is.na(Abundance_for50))) NA_real_ else max(Abundance_for50, na.rm = TRUE),
+    Abundance_for50_comp_all = case_when(
+      all(is.na(Abundance_for50)) ~ NA_real_,
+      n() == 1 ~ Abundance_for50,
+      max_abundance == 5 ~ 5,
+      n() == 2 & any(Abundance_for50 == 1, na.rm = TRUE) ~ Abundance_for50,
+      TRUE ~ max_abundance + 1
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# compile for 200 m
+comp_family <- comp_family %>%
+  group_by(Family, Site, Season) %>%
+  mutate(
+    max_abundance = if (all(is.na(Abundance_for200))) NA_real_ else max(Abundance_for200, na.rm = TRUE),
+    Abundance_for200_comp_all = case_when(
+      all(is.na(Abundance_for200)) ~ NA_real_,
+      n() == 1 ~ Abundance_for200,
+      max_abundance == 5 ~ 5,
+      n() == 2 & any(Abundance_for200 == 1, na.rm = TRUE) ~ Abundance_for200,
+      TRUE ~ max_abundance + 1
+    )
+  ) %>%
+  ungroup() %>%
+  select(-max_abundance)
+
+# remove subtype column and old abundance columns that compile at subtype level
+comp_family <- comp_family %>% select(-Subtype, -Abundance_for50, -Abundance_for200)
+
+# delete duplicates, keep highest abundance rank
+comp_family_abundance <- comp_family %>%
+  group_by(Site, Season, Family) %>%
+  slice_max(Abundance_for200_comp_all, n = 1, with_ties = FALSE) %>%
+  ungroup()
+
+
+## Compile bee samples at the family level
+pollen_samples_comp_fam <- pollen_samples_abundance %>% select(-Abundance_for50, -Abundance_for200)
+pollen_samples_comp_fam <- pollen_samples_comp_fam %>% filter(Count_scaled != 0)
+# remove subtype
+pollen_samples_comp_fam <- pollen_samples_comp_fam %>% select(-Subtype)
+# are there ever multiple subtypes (so more than one of the same family) within a slide code?
+pollen_samples_comp_fam %>%
+  count(Slide_code, Family) %>%
+  filter(n > 1) 
+# 0 so no need to compile, already done
+
+# add back to pollen_samples_abundance in a new df without subtype
+pollen_samples_abundance_fam <- pollen_samples_comp_fam %>%
+  distinct(Slide_code, Site, Season, Num_ID, Date_pollen) %>%            
+  left_join(comp_family_abundance) %>%
+  left_join(pollen_samples_comp_fam %>% select(Slide_code, Family, Count_scaled))
+
+# replace NAs with zeros for Count_scaled
+pollen_samples_abundance_fam <- pollen_samples_abundance_fam %>% mutate(Count_scaled = replace_na(Count_scaled, 0))
+
+# these need to match
+sum(pollen_samples_abundance_fam$Count_scaled)
+sum(pollen_samples_abundance$Count_scaled)
+# excellent
 
 
 ```
@@ -1595,6 +1751,45 @@ pollen_beehav_nest <- pollen_beehav_nest %>%
            Nest %in% c("J100", "J87", "J91")))
 
 
+## Compile bee samples at the family level
+# pollen_beehav_fam <- pollen_beehav %>% select(-Subtype)
+# are there ever multiple subtypes (so more than one of the same family) within a slide code?
+# pollen_beehav_fam %>%
+#   count(Slide_code, Family) %>%
+#   filter(n > 1) 
+# 0 so no need to compile, already done
+
+# richness at the nest level for all samples compiled
+pollen_beehav_fam <- pollen_beehav %>%
+  group_by(Nest) %>%
+  mutate(Richness_nest_f = n_distinct(Family)) %>%
+  ungroup()
+
+# richness per sample
+pollen_beehav_fam <- pollen_beehav_fam %>%
+  group_by(Slide_code) %>%
+  mutate(Richness_ind_f = n_distinct(Family)) %>%
+  ungroup()
+
+# average richness at the individual level for each sample
+pollen_beehav_fam <- pollen_beehav_fam %>%
+  group_by(Bee_ID, Slide_code) %>%
+  mutate(Richness_ind_mean_v1_f = n_distinct(Family)) %>%
+  ungroup()
+pollen_beehav_fam <- pollen_beehav_fam %>%
+  group_by(Bee_ID) %>%
+  mutate(Richness_ind_mean_f = mean(Richness_ind_mean_v1_f)) %>%
+  ungroup()
+# remove column
+pollen_beehav_fam <- pollen_beehav_fam %>% select(-Richness_ind_mean_v1_f)
+
+
+# Are are numbers different when groups at the family vs subtype level?
+pollen_beehav_fam %>% filter(Richness_ind != Richness_ind_f) # no
+pollen_beehav_fam %>% filter(Richness_ind_mean != Richness_ind_mean_f) # no
+pollen_beehav_fam %>% filter(Richness_nest != Richness_nest_f) # yes, 11 rows
+
+
 ```
 
 ```{r Descriptive_and_Saving}
@@ -1608,7 +1803,6 @@ beehav_filt <- beehav %>%
 # max is 62 days, min is 1
 
 
-
 hist(beehav_filt$Days_observed)
 
 mean(beehav_filt$Days_observed) # mean = 8.23
@@ -1620,7 +1814,6 @@ sd_days <- sd(beehav_filt$Days_observed)
 se <- sd_days / sqrt(n)
 CI <- mean_days + c(-1, 1) * qt(0.975, n - 1) * se
 CI # CI = 3.89, 12.57
-
 
 
 # make plot
@@ -1642,6 +1835,8 @@ pollen <- pollen %>%
   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
 pollen_samples_abundance <- pollen_samples_abundance %>%
   mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
+pollen_samples_abundance_fam <- pollen_samples_abundance_fam %>%
+  mutate(Day_of_season = as.integer(Date_pollen - season_start) + 1)
 
 
 ## How were tasks allocated within social nests?
@@ -1649,7 +1844,6 @@ beehav_nest_sum <- beehav %>%
   filter(Nest == 'J18' | Nest == 'J87' | Nest == 'J91' | Nest == 'J92' | Nest == 'J100') %>%
   filter(!grepl('No ID', Bee_ID)) %>% 
   filter(!grepl('Unknown', Bee_ID))
-
 
 
 ## Saving wrangled data
@@ -1664,7 +1858,7 @@ write.csv(beehav_sum, 'Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
 write.csv(beehav_full, 'Data/Behaviour/Behaviour_nest_full_cleaned.csv')
 
 # pollen samples and sociality 
-write.csv(pollen_beehav, 'Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
+write.csv(pollen_beehav_fam, 'Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
 
 # pollen richness for individuals  
 write.csv(pollen_beehav_ind, 'Data/Pollen_and_Surveys/Pollen_richness_individuals_cleaned.csv')
@@ -1674,10 +1868,11 @@ write.csv(pollen_beehav_nest, 'Data/Pollen_and_Surveys/Pollen_richness_nests_cle
 
 # pollen samples and full floral abundance
 write.csv(pollen_samples_abundance, 'Data/Pollen_and_Surveys/Pollen_samples_abundance_cleaned.csv')
+write.csv(pollen_samples_abundance_fam, 'Data/Pollen_and_Surveys/Pollen_samples_abundance_fam_cleaned.csv')
 
 # abundance for figure
 write.csv(abundance_for_fig, 'Data/Pollen_and_Surveys/Abundance_50m_for_figure_cleaned.csv')
-write.csv(abundance_for_fig_not_collected, 'Data/Pollen_and_Surveys/Abundance_50m_for_figure_not_collected_cleaned.csv')
+write.csv(abundance_for_fig_not_collected, 'Data/Pollen_and_Surveys/Abundance_50m_for_figure_not_collected_cleaned.csv') # conmpiled at fam, no subtypes
 
 # save full beehav df
 write.csv(beehav, 'Data/Behaviour/Behaviour_nest_extensive_cleaned.csv')
