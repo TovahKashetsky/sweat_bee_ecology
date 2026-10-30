@@ -1,0 +1,7 @@
+"Effect","Term","Estimate","Standard Error","P-value"
+"Fixed","Abundance_for200_comp_all","-0.55","0.49","0.26"
+"Fixed","Day_of_season","0.03","0.03","0.34"
+"Fixed","SiteKB","-1.25","2.38","0.60"
+"Random","Slide_code:Num_ID","3.46","",""
+"Random","Num_ID","0.00","",""
+"Random","Family","0.00","",""

@@ -748,11 +748,8 @@ ggsave('Figures/Pollen_combined_legend.png', samples_legend_combined, width = 5,
 
 
 
-
-
-
 pollen_samples %>%
-  group_by(Num_ID_number) %>%
+  group_by(Bee_ID) %>%
   summarise(
     n_statuses = n_distinct(Social_status_at_time_con),
     statuses   = paste(sort(unique(Social_status_at_time_con)), collapse = ", ")
@@ -760,7 +757,7 @@ pollen_samples %>%
   filter(n_statuses > 1)
 
 # which bees has both soical and solitary status
-# 66, 67, 70, 77
+# 4: JAM_P-PBG, JAM_W-OWW, JAM_W-PWO, JAM_Y-YPP
 
 ```
 
@@ -1869,4 +1866,53 @@ pollen_beehav %>%
 
 
 
+```
+
+```{r Flower_constancy}
+
+# make column to say flower constant or not
+flower_constancy <- pollen_samples_abundance %>% 
+  filter(Count_scaled > 0) %>% 
+  mutate(Flower_constant = ifelse(Count_scaled >= 285, 1, 0))
+
+# make mini df
+flower_constancy <- flower_constancy %>% 
+  group_by(Flower_constant, Abundance_for50) %>% 
+  summarise(n = length(Slide_code)) 
+
+# change 0 and 1 in Flower_constant column for terms 
+flower_constancy <- flower_constancy %>% mutate(Flower_constant = sub(1, "constant", Flower_constant))
+flower_constancy <- flower_constancy %>% mutate(Flower_constant = sub(0, "not_constant", Flower_constant))
+
+# pivot wider
+flower_constancy <- flower_constancy %>% pivot_wider(names_from = Flower_constant, values_from = n)
+
+# rpelace NA 
+flower_constancy$constant <- flower_constancy$constant %>% replace_na(0)
+flower_constancy$not_constant <- flower_constancy$not_constant %>% replace_na(0)
+
+# create proportion
+flower_constancy_prop <- flower_constancy %>% mutate(Total = (constant + not_constant))
+flower_constancy_prop <- flower_constancy_prop %>% mutate(Prop_constant = (constant / Total))
+
+
+
+# plot
+flower_constancy_prop %>% 
+  ggplot(aes(y = Prop_constant, x = Abundance_for50)) +
+  geom_col(fill = '#52803c', width = 0.75) +
+  geom_text(aes(y = 1.05, label = Total), size = 3.5) +
+  scale_y_continuous(
+    limits = c(0, 1.1),
+    breaks = seq(0, 1, 0.25),
+    expand = expansion(mult = c(0, 0))
+  ) +
+  labs(y = 'Proportion of monofloral samples', x = 'Abundance at 50 m radius') +
+ # ylim(0, 1) +
+  scale_x_continuous(breaks = c(0, 1, 2, 3, 4, 5)) 
+
+
+# 132 family - sample combinations 
+sum(flower_constancy_prop$Total)
+pollen_samples_abundance %>% filter(Count_scaled > 0)
 ```

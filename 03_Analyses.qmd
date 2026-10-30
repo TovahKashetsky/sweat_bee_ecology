@@ -25,7 +25,7 @@ beehav_sum <- read_csv('Data/Behaviour/Behaviour_nest_summary_cleaned.csv')
 beehav_full <- read_csv('Data/Behaviour/Behaviour_nest_full_cleaned.csv')
 
 # pollen_samples and behaviour data
-pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_cleaned.csv')
+pollen_beehav <- read_csv('Data/Behaviour/Pollen_and_behaviour_fam_cleaned.csv')
 
 # abundance data
 pollen_samples_abundance <- read_csv('Data/Pollen_and_Surveys/Pollen_samples_abundance_cleaned.csv')
@@ -132,10 +132,205 @@ social_sum <- beehav_full %>%
 
 ```
 
+```{r Pollen_and_Sociality}
+
+
+### FLower constancy and social status
+
+# insepct bees and samples with both social and pollen data
+distinct <- pollen_beehav %>% 
+  distinct(Slide_code, .keep_all = TRUE)
+# 44 samples with both data
+distinct %>% 
+  group_by(Site) %>% 
+  summarise(Count = (length(unique(Bee_ID))))
+# from 24 indivduals (22 JAM, 2 KB)
+
+
+# flower constancy
+
+# total counts 50
+pollen_beehav %>% 
+  group_by(Social_status_at_time_con) %>% 
+  summarise(Count = (length(unique(Slide_code))))
+# 10 social, 34 solitary
+
+pollen_beehav %>% 
+  filter(Count_scaled >= 285) %>% 
+  count(Social_status_at_time_con)
+# 5 social and 20 solitary
+# 50% and 59%
+
+# how many bees had sampels as both social and solitary?
+soc_and_sol <- pollen_beehav %>%
+  group_by(Bee_ID) %>%
+  summarise(values = paste(unique(Social_status_at_time_con), collapse = ", "))
+# 4: JAM_P-PBG, JAM_W-OWW, JAM_W-PWO, JAM_Y-YPP
+
+
+# how many samples were in each nest, for social vs solitary? If we had more samples form one type of nest, it could bias it, e.g., 4 samples per social nest but 2 per solitary
+slides_per_nest <- pollen_beehav %>% 
+  group_by(Social_status_ever_con, Nest) %>% 
+  summarise(slide_count = length(unique(Slide_code)))
+slides_per_nest %>% 
+  group_by(Social_status_ever_con) %>% 
+  summarise(mean_slide_count = mean(slide_count))
+# 2.4 for social nests
+# 1.7 for solitary nests
+
+
+### Pollen diversity and sociality 
+
+# remove duplicates of nests
+pollen_beehav_nests <- pollen_beehav %>% 
+  group_by(Nest) %>% 
+  distinct(Nest, .keep_all = TRUE)
+# keep columns that make sense
+pollen_beehav_nests <- pollen_beehav_nests %>% select(Nest, Site, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_nest, Richness_nest_f)
+# how many samples per nest?
+num_samples_nest <- pollen_beehav %>% 
+  group_by(Nest) %>% 
+  summarise(N_samples = length(unique(Slide_code)))
+# join together
+pollen_beehav_nests <- left_join(pollen_beehav_nests, num_samples_nest)
+
+
+# remove duplicates of slide codes 
+pollen_beehav_ind <- pollen_beehav %>% 
+  group_by(Slide_code) %>% 
+  distinct(Slide_code, .keep_all = TRUE)
+# keep columns that make sense
+pollen_beehav_ind <- pollen_beehav_ind %>% select(Nest, Site, Bee_ID, Slide_code, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_ind, Richness_ind_f)
+# how many samples per individual?
+num_samples_ind <- pollen_beehav %>% 
+  group_by(Bee_ID) %>% 
+  summarise(N_samples = length(unique(Slide_code)))
+# join together
+pollen_beehav_ind <- left_join(pollen_beehav_ind, num_samples_ind)
+
+
+# GLMM
+
+
+ ## Individual Level ##
+
+## Individual-level - Subtypes - Conservative
+mod_richness_ind_type_con <- glmer(Richness_ind ~ Social_status_at_time_con + Site + (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
+
+check_model(mod_richness_ind_type_con) # great
+plot(simulateResiduals(mod_richness_ind_type_con)) # great
+summary(mod_richness_ind_type_con) # not significant, no diff with individual ID
+
+
+## Individual-level - Family - Conservative
+mod_richness_ind_fam_con <- glmer(Richness_ind_f ~ Social_status_at_time_con + Site + (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
+
+check_model(mod_richness_ind_fam_con) # great!
+plot(simulateResiduals(mod_richness_ind_fam_con))
+summary(mod_richness_ind_fam_con) # not significant
+
+
+## Individual-level - Subtypes - Liberal 
+mod_richness_ind_type_lib <- glmer(Richness_ind ~ Social_status_at_time_lib + Site + (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
+
+check_model(mod_richness_ind_type_lib) # great!
+plot(simulateResiduals(mod_richness_ind_type_lib))
+summary(mod_richness_ind_type_lib) # not significant, no diff with individual ID
+
+
+## Individual-level - Family - Liberal 
+mod_richness_ind_fam_lib <- glmer(Richness_ind_f ~ Social_status_at_time_lib + Site + (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
+
+check_model(mod_richness_ind_fam_lib) # great
+plot(simulateResiduals(mod_richness_ind_fam_lib)) # great
+summary(mod_richness_ind_fam_lib) # not significant
+
+
+
+ ## Nest Level ##
+
+## Nest-level - Subtypes - Conservative
+mod_richness_nest_type_con <- lm(Richness_nest ~ Social_status_ever_con + Site + N_samples, data = pollen_beehav_nests)
+
+check_model(mod_richness_nest_type_con) # good
+plot(simulateResiduals(mod_richness_nest_type_con)) # good
+summary(mod_richness_nest_type_con) # not significant 
+
+
+## Nest-level - Family - Conservative
+mod_richness_nest_fam_con <- lm(Richness_nest_f ~ Social_status_ever_con + Site + N_samples, data = pollen_beehav_nests)
+
+check_model(mod_richness_nest_fam_con) # good
+plot(simulateResiduals(mod_richness_nest_fam_con)) # good
+summary(mod_richness_nest_fam_con) # not significant
+
+
+## Nest-level - Subtypes - Liberal
+mod_richness_nest_type_lib <- lm(Richness_nest ~ Social_status_ever_lib + Site + N_samples, data = pollen_beehav_nests)
+
+check_model(mod_richness_nest_type_lib) # good
+plot(simulateResiduals(mod_richness_nest_type_lib)) # good
+summary(mod_richness_nest_type_lib) # significant!
+
+
+## Nest-level - Family - Liberal
+mod_richness_nest_fam_lib <- lm(Richness_nest_f ~ Social_status_ever_lib + Site + N_samples, data = pollen_beehav_nests)
+
+check_model(mod_richness_nest_fam_lib) # good
+plot(simulateResiduals(mod_richness_nest_fam_lib)) # good
+summary(mod_richness_nest_fam_lib) # significant!
+
+
+## Make a table
+
+# make list of models with descriptors
+pollen_and_social_models <- list(
+  "individual_conservative_type"   = mod_richness_ind_type_con,
+  "individual_conservative_family" = mod_richness_ind_fam_con,
+  "individual_liberal_type"        = mod_richness_ind_type_lib,
+  "individual_liberal_family"      = mod_richness_ind_fam_lib,
+  "nest_conservative_type"         = mod_richness_nest_type_con,
+  "nest_conservative_family"       = mod_richness_nest_fam_con,
+  "nest_liberal_type"              = mod_richness_nest_type_lib,
+  "nest_liberal_family"            = mod_richness_nest_fam_lib
+)
+
+
+library(purrr)
+library(tidyr)
+library(broom)
+library(broom.mixed)
+
+# round up function because just round() wasn't working
+round_half_up <- function(x, digits = 2) {
+  sign(x) * floor(abs(x) * 10^digits + 0.5 + 1e-9) / 10^digits
+}
+
+# make table
+pollen_and_social_results <- map_dfr(pollen_and_social_models, tidy, .id = "model") %>% 
+  filter(str_detect(term, "^Social_status")) %>% 
+  separate(model, into = c("Richness", "Social", "Taxa"), sep = "_") %>% 
+  select(Richness, Social, Taxa, B = estimate, SE = std.error, P = p.value) %>% 
+  mutate(
+    B  = sprintf("%.2f", round_half_up(B, 2)),
+    SE = sprintf("%.2f", round_half_up(SE, 2)),
+    P  = if_else(
+      P < 0.05,
+      sprintf("%.3f", round_half_up(P, 3)),
+      sprintf("%.2f", round_half_up(P, 2))
+    )
+  )
+
+# save as csv
+write.csv(pollen_and_social_results, "Data/Tables/Output_ollen_and_social.csv", row.names = FALSE)
+
+
+```
+
 ```{r Flower_Constancy}
 
 
-### 2i. Flower constancy
+### Flower constancy
 
 # how many samples are above 95% of one pollen type
 pollen_samples %>% 
@@ -165,26 +360,93 @@ mean(mean_num_samples$count)
 
 # make column to say flower constant or not
 pollen_samples_abundance <- pollen_samples_abundance %>% mutate(Flower_constant = ifelse(Count_scaled >= 285, 1, 0))
+pollen_samples_abundance_fam <- pollen_samples_abundance_fam %>% mutate(Flower_constant = ifelse(Count_scaled >= 285, 1, 0))
 
 # make it only plants collected
 pollen_samples_abundance_coll <- pollen_samples_abundance %>% 
+  filter(Count_scaled > 0)
+pollen_samples_abundance_fam_coll <- pollen_samples_abundance_fam %>% 
   filter(Count_scaled > 0)
 
 # plot
 pollen_samples_abundance_coll %>% 
   ggplot(aes(x = Abundance_for50, fill = factor(Flower_constant), colour = factor(Flower_constant))) +
   geom_histogram(position = 'dodge')
+pollen_samples_abundance_fam_coll %>% 
+  ggplot(aes(x = Abundance_for50_comp_all, fill = factor(Flower_constant), colour = factor(Flower_constant))) +
+  geom_histogram(position = 'dodge')
 
-# model
+
+# GLMM
+
+ ## 50 m ##
+
+# 50 - subtypes
 mod_flow_cons_50 <- glmer(Flower_constant ~ Abundance_for50 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID / Slide_code), family = binomial(link = "logit"), data = pollen_samples_abundance_coll)
 
-plot(simulateResiduals(mod_flow_cons_50))
-summary(mod_flow_cons_50)
+plot(simulateResiduals(mod_flow_cons_50)) # good
+summary(mod_flow_cons_50) # not sig
 
-mod_flow_cons_200 <- glmer(Flower_constant ~ Abundance_for200 + Day_of_season + Site + (1 | Family) + (1 | Num_ID / Slide_code), family = binomial(link = "logit"), data = pollen_samples_abundance_coll)
 
-plot(simulateResiduals(mod_flow_cons_200))
-summary(mod_flow_cons_200)
+# 50 - family
+mod_flow_cons_50_fam <- glmer(Flower_constant ~ Abundance_for50_comp_all + Day_of_season + Site + (1 | Family) + (1 | Num_ID / Slide_code), family = binomial(link = "logit"), data = pollen_samples_abundance_fam_coll)
+
+plot(simulateResiduals(mod_flow_cons_50_fam)) # fine
+summary(mod_flow_cons_50_fam) # not sig
+
+
+ ## 200 m ##
+
+# 200 - subtypes
+mod_flow_cons_200 <- glmer(Flower_constant ~ Abundance_for200 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID / Slide_code), family = binomial(link = "logit"), data = pollen_samples_abundance_coll)
+
+plot(simulateResiduals(mod_flow_cons_200)) # good
+summary(mod_flow_cons_200) # not sig
+
+# 200 - family
+mod_flow_cons_200_fam <- glmer(Flower_constant ~ Abundance_for200_comp_all + Day_of_season + Site + (1 | Family) + (1 | Num_ID / Slide_code), family = binomial(link = "logit"), data = pollen_samples_abundance_fam_coll)
+
+plot(simulateResiduals(mod_flow_cons_200_fam)) # best we can get
+summary(mod_flow_cons_200_fam) # not sig
+
+
+## Make tables
+
+# make a function to be used for these tables and the floral aubundance GLMMs
+make_model_table <- function(mod) {
+  broom.mixed::tidy(mod, effects = c("fixed", "ran_pars")) %>% 
+    filter(term != "(Intercept)" | effect != "fixed") %>% 
+    mutate(
+      Effect = if_else(effect == "fixed", "Fixed", "Random"),
+      Term = case_when(
+        effect == "fixed"         ~ term,
+        term == "sd__Observation" ~ "Residual",
+        term == "sd__(Intercept)" ~ group,
+        TRUE                      ~ paste0(group, ": ", str_remove(term, "^(sd|cor)__"))
+      )
+    ) %>% 
+    select(Effect, Term, Estimate = estimate, `Standard Error` = std.error, P = p.value) %>% 
+    mutate(
+      Estimate = sprintf("%.2f", round_half_up(Estimate, 2)),
+      `Standard Error` = if_else(is.na(`Standard Error`), "",
+                                 sprintf("%.2f", round_half_up(`Standard Error`, 2))),
+      `P-value` = case_when(
+        is.na(P)  ~ "",
+        P < 0.001 ~ "<0.001",
+        P < 0.05  ~ sprintf("%.3f", round_half_up(P, 3)),
+        TRUE      ~ sprintf("%.2f", round_half_up(P, 2))
+      )
+    ) %>% 
+    select(-P)
+}
+
+# apply funciton
+tab_flow_cons_50_fam <- make_model_table(mod_flow_cons_50_fam)
+tab_flow_cons_200_fam <- make_model_table(mod_flow_cons_200_fam)
+
+# save
+write.csv(tab_flow_cons_50_fam, "Data/Tables/Output_flow_cons_50_fam.csv", row.names = FALSE)
+write.csv(tab_flow_cons_200_fam, "Data/Tables/Output_flow_cons_200_fam.csv", row.names = FALSE)
 
 
 ```
@@ -371,7 +633,7 @@ permanova
 ```{r Pollen_Diversity_and_Richness, include=FALSE}
 
 
-### 2iii. Pollen collection divserity 
+### Pollen collection divserity 
 
 # plot richness over time
 
@@ -569,11 +831,16 @@ pollen_samples %>%
 
 ```{r Floral_Abundance_GLM}
 
-### 2iv. Floral abundance
+### Floral abundance
 
 # replace NAs with 0
 pollen_samples_abundance <- pollen_samples_abundance %>%
   mutate(Abundance_for50 = replace_na(Abundance_for50, 0))
+pollen_samples_abundance_fam <- pollen_samples_abundance_fam %>%
+  mutate(Abundance_for50_comp_all = replace_na(Abundance_for50_comp_all, 0))
+
+
+ ## 50 m ##
 
 # 50 m radius with subtypes
 mod_abun_50 <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for50 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID),
@@ -590,10 +857,6 @@ summary(mod_abun_50)
 
 
 # 50 m at family level
-# replace NAs with 0
-pollen_samples_abundance_fam <- pollen_samples_abundance_fam %>%
-  mutate(Abundance_for50_comp_all = replace_na(Abundance_for50_comp_all, 0))
-
 mod_abun_50_f <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for50_comp_all + Day_of_season + Site + (1 | Family) + (1 | Num_ID),
         family = betabinomial(link = "logit"),
         data = pollen_samples_abundance_fam)
@@ -605,6 +868,8 @@ testOutliers(mod_abun_50_f) # no sig outliers
 # so trust the summary
 summary(mod_abun_50_f)
 
+
+## 200 m ##
 
 # 200 m radius grouped at subtype
 mod_abun_200 <- glmmTMB(cbind(Count_scaled, 300 - Count_scaled) ~ Abundance_for200 + Day_of_season + Site + (1 | Subtype) + (1 | Num_ID),
@@ -641,114 +906,16 @@ AIC(mod_abun_50_f) # 2009.58
 AIC(mod_abun_200_f) # 2028.609
 AIC(mod_abun_200_f) - AIC(mod_abun_50_f) # 50m model fits better by 19 units
 
-```
 
-```{r Pollen_and_Sociality}
+## Make tables
 
+# apply function 
+tab_abun_50_f <- make_model_table(mod_abun_50_f)
+tab_abun_200_f <- make_model_table(mod_abun_200_f)
 
-### 3i. FLower constancy and social status
+write.csv(tab_abun_50_f, "Data/Tables/Output_abun_50_fam.csv", row.names = FALSE)
+write.csv(tab_abun_200_f, "Data/Tables/Output_abun_200_fam.csv", row.names = FALSE)
 
-# insepct bees and samples with both social and pollen data
-distinct <- pollen_beehav %>% 
-  distinct(Slide_code, .keep_all = TRUE)
-# 44 samples with both data
-distinct %>% 
-  group_by(Site) %>% 
-  summarise(Count = (length(unique(Bee_ID))))
-# from 24 indivduals (22 JAM, 2 KB)
-
-
-# flower constancy
-
-# total counts 50
-pollen_beehav %>% 
-  group_by(Social_status_at_time_con) %>% 
-  summarise(Count = (length(unique(Slide_code))))
-# 10 social, 34 solitary
-
-pollen_beehav %>% 
-  filter(Count_scaled >= 285) %>% 
-  count(Social_status_at_time_con)
-# 5 social and 20 solitary
-# 50% and 59%
-
-# how many bees had sampels as both social and solitary?
-pollen_beehav %>%
-  group_by(Bee_ID) %>%
-  summarise(values = paste(unique(Social_status_at_time_con), collapse = ", "))
-# 3: JAM_P-PBG, JAM_W-OWW, JAM_W-PWO
-
-# how many samples were in each nest, for social vs solitary? If we had more samples form one type of nest, it could bias it, e.g., 4 samples per social nest but 2 per solitary
-slides_per_nest <- pollen_beehav %>% 
-  group_by(Social_status_ever_con, Nest) %>% 
-  summarise(slide_count = length(unique(Slide_code)))
-slides_per_nest %>% 
-  group_by(Social_status_ever_con) %>% 
-  summarise(mean_slide_count = mean(slide_count))
-# 2.4 for social nests
-# 1.7 for solitary nests
-
-
-### 3ii. Pollen diversity and sociality 
-
-# remove duplicates of nests
-pollen_beehav_nests <- pollen_beehav %>% 
-  group_by(Nest) %>% 
-  distinct(Nest, .keep_all = TRUE)
-# keep columns that make sense
-pollen_beehav_nests <- pollen_beehav_nests %>% select(Nest, Site, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_nest)
-# how many samples per nest?
-num_samples_nest <- pollen_beehav %>% 
-  group_by(Nest) %>% 
-  summarise(N_samples = length(unique(Slide_code)))
-# join together
-pollen_beehav_nests <- left_join(pollen_beehav_nests, num_samples_nest)
-
-
-# remove duplicates of slide codes 
-pollen_beehav_ind <- pollen_beehav %>% 
-  group_by(Slide_code) %>% 
-  distinct(Slide_code, .keep_all = TRUE)
-# keep columns that make sense
-pollen_beehav_ind <- pollen_beehav_ind %>% select(Nest, Site, Bee_ID, Slide_code, Social_status_at_time_con, Social_status_at_time_lib, Social_status_ever_con, Social_status_ever_lib, Richness_ind)
-# how many samples per individual?
-num_samples_ind <- pollen_beehav %>% 
-  group_by(Bee_ID) %>% 
-  summarise(N_samples = length(unique(Slide_code)))
-# join together
-pollen_beehav_ind <- left_join(pollen_beehav_ind, num_samples_ind)
-
-
-# GLMM
-
-# nest-level
-mod_richness_nest <- lm(Richness_nest ~ Social_status_ever_con + Site + N_samples, data = pollen_beehav_nests)
-
-check_model(mod_richness_nest) # good
-plot(simulateResiduals(mod_richness_nest))
-summary(mod_richness_nest) # not significant
-
-
-# mod_richness_nest_samples_included <- lm(Richness_nest ~ Social_status_ever_con + Site + N_samples, data = pollen_beehav_nests)
-
-# check_model(mod_richness_nest_samples_included) 
-# plot(simulateResiduals(mod_richness_nest_samples_included))
-# summary(mod_richness_nest_samples_included) 
-
-
-# individual-level
-mod_richness_ind <- glmer(Richness_ind ~ Social_status_at_time_con + Site + (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
-
-check_model(mod_richness_ind) # great!
-plot(simulateResiduals(mod_richness_ind))
-summary(mod_richness_ind) # not significant, no diff with individual ID
-
-
-# mod_richness_ind_samples_included <- glmer(Richness_ind ~ Social_status_at_time_con + Site + N_samples +  (1|Bee_ID), data = pollen_beehav_ind, family = poisson)
-# 
-# check_model(mod_richness_ind_samples_included) # great!
-# plot(simulateResiduals(mod_richness_ind_samples_included))
-# summary(mod_richness_ind_samples_included)
 
 
 ```
